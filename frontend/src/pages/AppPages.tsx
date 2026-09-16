@@ -50,7 +50,13 @@ import {
   type Transaction,
 } from '../services/api';
 import { useTheme } from '../theme/ThemeContext';
-import { currentYearMonth, formatAOA, formatDateAO, parseAOAInput } from '../utils/money';
+import {
+  currentYearMonth,
+  formatAOA,
+  formatDateAO,
+  formatPercent,
+  parseAOAInput,
+} from '../utils/money';
 
 const NAV_ITEMS: Array<{ to: string; label: string; icon: Icon; end?: boolean }> = [
   { to: '/app', label: 'Dashboard', icon: SquaresFour, end: true },
@@ -762,7 +768,7 @@ export function BudgetsPage() {
           <article key={b.id} className="panel budget-card">
             <header>
               <h2>{b.category_name}</h2>
-              <span className="num">{b.percent_used}%</span>
+              <span className="num">{formatPercent(b.percent_used)}</span>
             </header>
             <div
               className="bar"
@@ -1159,7 +1165,8 @@ export function GoalsPage() {
               />
             </div>
             <p>
-              {formatAOA(g.saved_cents)} de {formatAOA(g.target_cents)} · {g.percent}% · Falta{' '}
+              {formatAOA(g.saved_cents)} de {formatAOA(g.target_cents)} · {formatPercent(g.percent)}{' '}
+              · Falta{' '}
               {formatAOA(g.remainingCents)}
             </p>
             <p className="muted">

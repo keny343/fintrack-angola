@@ -9,8 +9,26 @@ React · TypeScript · Vite · Express · PostgreSQL · Docker · Vitest · GitH
 **Live:** [fintrack-angola.vercel.app](https://fintrack-angola.vercel.app) ·
 API health: [`/health`](https://fintrack-angola-api.onrender.com/health)
 
+**Try it without signing up** — `adnircio@fintrack.ao` / `senha-forte-2026`. The account carries three
+months of history, a broken food budget, an emergency fund behind pace, and two fixed bills, so every
+screen has something in it. It is a shared demo, so expect other people's edits.
+
 > Running on free plans: the API sleeps after 15 minutes idle, so the first request after a pause
 > takes about a minute. Reload once and it answers.
+
+![Dashboard: the month in KPIs, then what the numbers mean](./docs/images/dashboard.png)
+
+<details>
+<summary>More screens: savings goals, category report</summary>
+
+Savings goals report the pace you would need against the pace you are keeping, which is what turns a
+target into a decision:
+
+![A savings goal behind the pace it needs](./docs/images/objetivos.png)
+
+![Totals per category over a period](./docs/images/relatorios.png)
+
+</details>
 
 ## Problem
 

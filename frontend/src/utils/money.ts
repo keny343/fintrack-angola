@@ -14,6 +14,14 @@ export function formatAOA(amountCents: number): string {
   }
 }
 
+/**
+ * Percentages the pt way: 18,7% and not 18.7%. Sitting next to amounts that are
+ * already written with a comma, a dot reads as a different number entirely.
+ */
+export function formatPercent(value: number): string {
+  return `${value.toLocaleString('pt-PT', { maximumFractionDigits: 1 })}%`;
+}
+
 /** Parse user input like "150000" or "1.500,00" to centavos. */
 export function parseAOAInput(raw: string): number {
   const cleaned = raw
