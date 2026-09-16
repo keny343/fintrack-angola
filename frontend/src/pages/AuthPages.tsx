@@ -1,38 +1,384 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+
+function BrandMark({ large = false }: { large?: boolean }) {
+  return (
+    <span className="brand">
+      <span className={large ? 'brand-mark lg' : 'brand-mark'}>Kz</span>
+      FinTrack <span className="muted">Angola</span>
+    </span>
+  );
+}
+
+/** Static preview of the real dashboard, used as the landing hero visual. */
+function ProductPreview() {
+  return (
+    <div className="lp-preview">
+      <div className="preview-bar">
+        <i className="preview-dot" />
+        <i className="preview-dot" />
+        <i className="preview-dot" />
+        <span className="preview-title">fintrack.ao — Dashboard · Setembro 2026</span>
+      </div>
+      <div className="preview-body">
+        <div className="preview-kpis">
+          <div className="preview-kpi">
+            <small>Saldo</small>
+            <b>300 000,00 Kz</b>
+          </div>
+          <div className="preview-kpi">
+            <small>Receitas</small>
+            <b className="pos">450 000,00 Kz</b>
+          </div>
+          <div className="preview-kpi">
+            <small>Despesas</small>
+            <b className="neg">150 000,00 Kz</b>
+          </div>
+          <div className="preview-kpi">
+            <small>Líquido</small>
+            <b>300 000,00 Kz</b>
+          </div>
+        </div>
+        <div className="preview-split">
+          <div className="preview-chart">
+            <span className="preview-label">Despesas por categoria</span>
+            <div className="preview-chart-bars">
+              <i style={{ height: '100%' }} />
+              <i style={{ height: '62%' }} />
+              <i style={{ height: '45%' }} />
+              <i style={{ height: '30%' }} />
+              <i style={{ height: '22%' }} />
+              <i style={{ height: '14%' }} />
+            </div>
+          </div>
+          <div className="preview-list">
+            <span className="preview-label">Actividade recente</span>
+            <div className="preview-row">
+              <span>Habitação</span>
+              <span className="neg">− 150 000,00</span>
+            </div>
+            <div className="preview-row">
+              <span>Salário</span>
+              <span className="pos">+ 450 000,00</span>
+            </div>
+            <div className="preview-row">
+              <span>Propinas</span>
+              <span className="neg">− 80 000,00</span>
+            </div>
+            <div className="preview-row">
+              <span>Energia</span>
+              <span className="neg">− 25 000,00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const FEATURES: Array<{ icon: string; title: string; body: string }> = [
+  {
+    icon: '↕',
+    title: 'Receitas e despesas',
+    body: 'Lança movimentos por conta e categoria, filtra por período ou tipo e corrige o que estiver errado.',
+  },
+  {
+    icon: '◎',
+    title: 'Orçamentos mensais',
+    body: 'Define um limite por categoria e acompanha quanto já gastaste, quanto sobra e a percentagem usada.',
+  },
+  {
+    icon: '↻',
+    title: 'Recorrências',
+    body: 'Renda, salário e propinas lançados automaticamente todos os meses — o dia 31 cai a 28 em Fevereiro, sem falhar meses.',
+  },
+  {
+    icon: '◆',
+    title: 'Objetivos de poupança',
+    body: 'Diz quanto queres juntar e até quando. O sistema calcula quanto falta por mês e compara com o teu ritmo real.',
+  },
+  {
+    icon: '▤',
+    title: 'Relatórios',
+    body: 'Totais por categoria em qualquer intervalo de datas, para perceberes para onde foi o dinheiro.',
+  },
+  {
+    icon: '⛨',
+    title: 'Dados isolados',
+    body: 'Cada conta só acede aos seus próprios dados, e isso é verificado por testes automáticos a cada alteração.',
+  },
+];
 
 export function LandingPage() {
   const { user } = useAuth();
   if (user) return <Navigate to="/app" replace />;
 
   return (
-    <div className="shell landing">
-      <header className="landing-top">
-        <span className="brand">FinTrack Angola</span>
-        <nav>
-          <Link to="/login">Entrar</Link>
-          <Link className="btn btn-primary" to="/register">
-            Criar conta
-          </Link>
-        </nav>
-      </header>
-      <main className="landing-hero">
-        <p className="eyebrow">Gestão financeira pessoal · AOA/Kz</p>
-        <h1>Controlo claro das tuas receitas e despesas em Kwanza.</h1>
-        <p className="lede">
-          Categorias locais, orçamentos mensais, dashboard e relatórios — modelado para o dia a dia
-          em Angola, sem clutter de fintech estrangeira.
-        </p>
-        <div className="cta-row">
-          <Link className="btn btn-primary" to="/register">
-            Começar
-          </Link>
-          <Link className="btn btn-ghost" to="/login">
-            Já tenho conta
-          </Link>
+    <div className="lp">
+      <header className="lp-nav">
+        <div className="lp-nav-inner">
+          <BrandMark />
+          <nav>
+            <a className="nav-hide" href="#funcionalidades">
+              Funcionalidades
+            </a>
+            <a className="nav-hide" href="#kwanza">
+              Kwanza
+            </a>
+            <a className="nav-hide" href="#seguranca">
+              Segurança
+            </a>
+            <Link to="/login">Entrar</Link>
+            <Link className="btn btn-primary btn-sm" to="/register">
+              Criar conta
+            </Link>
+          </nav>
         </div>
-      </main>
+      </header>
+
+      <section className="lp-hero">
+        <div className="lp-inner lp-hero-grid">
+          <div>
+            <p className="eyebrow">Finanças pessoais · Angola · AOA/Kz</p>
+            <h1>O teu dinheiro em Kwanzas, com contas que batem certo.</h1>
+            <p className="lede">
+              Registas receitas e despesas, defines orçamentos e objetivos, e vês para onde vai o
+              salário. Feito para o dia a dia em Angola: categorias locais, datas em dd/mm/aaaa e
+              valores sempre ao centavo.
+            </p>
+            <div className="cta-row">
+              <Link className="btn btn-primary" to="/register">
+                Criar conta gratuita
+              </Link>
+              <Link className="btn btn-ghost" to="/login">
+                Já tenho conta
+              </Link>
+            </div>
+            <p className="hero-note">
+              Projeto de engenharia aberto — sem publicidade, sem venda de dados.
+            </p>
+          </div>
+          <aside className="hero-facts">
+            <div>
+              <b>Kz</b>
+              <p>
+                Montantes inteiros em centavos e formatação pt-AO, do formulário à base de dados.
+              </p>
+            </div>
+            <div>
+              <b>6 áreas</b>
+              <p>
+                Transações, orçamentos, recorrências, objetivos, relatórios e dashboard, completas.
+              </p>
+            </div>
+            <div>
+              <b>50 testes</b>
+              <p>
+                Suite automática que corre a cada alteração, incluindo isolamento entre contas.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <div className="lp-preview-wrap">
+        <ProductPreview />
+      </div>
+
+      <section className="lp-section" id="funcionalidades">
+        <div className="lp-inner">
+          <div className="section-head">
+            <p className="eyebrow">O que já funciona</p>
+            <h2>Seis coisas bem feitas, em vez de vinte a meio.</h2>
+            <p>
+              Cada área abaixo está implementada de ponta a ponta — interface, API e base de dados —
+              e coberta por testes automáticos.
+            </p>
+          </div>
+          <div className="feature-grid">
+            {FEATURES.map((f) => (
+              <article className="feature-card" key={f.title}>
+                <span className="feature-icon" aria-hidden="true">
+                  {f.icon}
+                </span>
+                <h3>{f.title}</h3>
+                <p>{f.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section dark" id="kwanza">
+        <div className="lp-inner">
+          <div className="section-head">
+            <p className="eyebrow">Porque o Kwanza precisa de cuidado</p>
+            <h2>Valores guardados ao centavo, não em vírgula flutuante.</h2>
+            <p>
+              Muitas aplicações guardam dinheiro como número decimal e acumulam erros de
+              arredondamento. Aqui os montantes são inteiros em centavos, do formulário até à base
+              de dados.
+            </p>
+          </div>
+          <div className="step-grid">
+            <div className="step">
+              <b>01</b>
+              <h3>Escreves em Kwanzas</h3>
+              <p>
+                Introduzes <strong>150.000,50</strong> como estás habituado, com vírgula decimal e
+                separador de milhares.
+              </p>
+            </div>
+            <div className="step">
+              <b>02</b>
+              <h3>Guardamos em centavos</h3>
+              <p>
+                O valor viaja e é gravado como <strong>15 000 050</strong> centavos — um inteiro, sem
+                arredondamentos silenciosos.
+              </p>
+            </div>
+            <div className="step">
+              <b>03</b>
+              <h3>Lês em pt-AO</h3>
+              <p>
+                Volta formatado como <strong>150 000,50 Kz</strong>, com datas em dd/mm/aaaa e
+                números alinhados nas tabelas.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section" id="seguranca">
+        <div className="lp-inner">
+          <div className="detail-split">
+            <div>
+              <p className="eyebrow">Segurança e confiança</p>
+              <h2 style={{ fontSize: '1.9rem', margin: '0.5rem 0 1rem' }}>
+                As tuas finanças são privadas por construção.
+              </h2>
+              <ul className="check-list">
+                <li>Sessão em cookie httpOnly assinado, nunca acessível por JavaScript.</li>
+                <li>Palavras-passe guardadas com bcrypt, jamais em texto simples.</li>
+                <li>Consultas SQL parametrizadas, sempre filtradas pelo utilizador da sessão.</li>
+                <li>Limite de tentativas no login e cabeçalhos de segurança HTTP.</li>
+                <li>Registo de auditoria das ações importantes da conta.</li>
+                <li>Testes que tentam aceder aos dados de outra conta e têm de falhar.</li>
+              </ul>
+            </div>
+            <div className="code-card">
+              <div>
+                <span className="c-com">// todas as consultas filtram pela sessão</span>
+              </div>
+              <div>
+                <span className="c-key">SELECT</span> id, amount_cents, occurred_on
+              </div>
+              <div>
+                <span className="c-key">FROM</span> transactions
+              </div>
+              <div>
+                <span className="c-key">WHERE</span> user_id = <span className="c-str">$1</span>
+              </div>
+              <div>&nbsp;</div>
+              <div>
+                <span className="c-com">// e um teste garante o isolamento</span>
+              </div>
+              <div>
+                expect(intruder.get(<span className="c-str">'/api/transactions'</span>))
+              </div>
+              <div>
+                &nbsp;&nbsp;.toHaveLength(<span className="c-str">0</span>)
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section tight">
+        <div className="lp-inner">
+          <p className="eyebrow" style={{ marginBottom: '0.8rem' }}>
+            Construído com
+          </p>
+          <div className="stack-strip">
+            {[
+              'React',
+              'TypeScript',
+              'Vite',
+              'Express',
+              'PostgreSQL',
+              'Zod',
+              'Vitest',
+              'Docker',
+              'GitHub Actions',
+            ].map((t) => (
+              <span className="chip" key={t}>
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section tight">
+        <div className="lp-inner">
+          <div className="lp-cta">
+            <h2>Começa pelo mês em curso.</h2>
+            <p>
+              Cria a conta, lança o salário e duas despesas fixas. Em poucos minutos tens o teu
+              primeiro dashboard em Kwanzas.
+            </p>
+            <div className="cta-row">
+              <Link className="btn btn-primary" to="/register">
+                Criar conta
+              </Link>
+              <Link className="btn btn-ghost" to="/login">
+                Entrar
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <span>FinTrack Angola · gestão financeira pessoal em AOA</span>
+          <span>
+            Desenvolvido por{' '}
+            <a href="https://github.com/keny343" target="_blank" rel="noreferrer">
+              Adnírcio Inocêncio
+            </a>
+          </span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function AuthLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="auth-shell">
+      <aside className="auth-aside">
+        <Link to="/">
+          <BrandMark large />
+        </Link>
+        <div>
+          <h2>Controlo claro das tuas contas em Kwanzas.</h2>
+          <p>
+            Dashboard do mês, orçamentos por categoria, recorrências automáticas e objetivos de
+            poupança — tudo com valores ao centavo.
+          </p>
+          <ul className="auth-points">
+            <li>Categorias pensadas para Angola: propinas, energia, água, transporte.</li>
+            <li>Renda e salário lançados sozinhos todos os meses.</li>
+            <li>Os teus dados só são acessíveis pela tua sessão.</li>
+          </ul>
+        </div>
+        <p className="muted" style={{ fontSize: '0.85rem' }}>
+          Projeto de engenharia por Adnírcio Inocêncio
+        </p>
+      </aside>
+      <main className="auth-panel">{children}</main>
     </div>
   );
 }
@@ -62,7 +408,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="shell auth-shell">
+    <AuthLayout>
       <form className="auth-card" onSubmit={onSubmit}>
         <h1>Entrar</h1>
         <p className="muted">Acede ao teu painel FinTrack.</p>
@@ -85,10 +431,10 @@ export function LoginPage() {
           {busy ? 'A entrar…' : 'Entrar'}
         </button>
         <p className="muted">
-          Sem conta? <Link to="/register">Registar</Link>
+          Sem conta? <Link to="/register">Criar conta</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -118,7 +464,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="shell auth-shell">
+    <AuthLayout>
       <form className="auth-card" onSubmit={onSubmit}>
         <h1>Criar conta</h1>
         <p className="muted">Começa a organizar as tuas finanças em Kz.</p>
@@ -132,7 +478,7 @@ export function RegisterPage() {
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label>
-          Palavra-passe (≥8)
+          Palavra-passe (mínimo 8 caracteres)
           <input
             type="password"
             value={password}
@@ -142,12 +488,12 @@ export function RegisterPage() {
           />
         </label>
         <button className="btn btn-primary" disabled={busy} type="submit">
-          {busy ? 'A criar…' : 'Registar'}
+          {busy ? 'A criar…' : 'Criar conta'}
         </button>
         <p className="muted">
           Já tens conta? <Link to="/login">Entrar</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

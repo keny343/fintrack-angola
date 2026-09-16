@@ -37,6 +37,7 @@ Details: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | Transactions | Income/expense create, filter, delete |
 | Budgets | Monthly limit per category + progress |
 | Dashboard | Balance, month income/expense, chart, recent activity |
+| Landing | Public page with product preview, feature grid and security section |
 | Reports | Totals by category for a date range |
 | Goals | Savings targets with contributions, required monthly pace, on-track status |
 | Recurring | Monthly rules (rent, salary, tuition) with idempotent catch-up on login |

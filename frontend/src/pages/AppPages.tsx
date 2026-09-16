@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link, Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -21,6 +21,15 @@ import {
 } from '../services/api';
 import { currentYearMonth, formatAOA, formatDateAO, parseAOAInput } from '../utils/money';
 
+const NAV_ITEMS = [
+  { to: '/app', label: 'Dashboard', end: true },
+  { to: '/app/transactions', label: 'Transações' },
+  { to: '/app/budgets', label: 'Orçamentos' },
+  { to: '/app/recurring', label: 'Recorrências' },
+  { to: '/app/goals', label: 'Objetivos' },
+  { to: '/app/reports', label: 'Relatórios' },
+];
+
 function AppShell() {
   const { user, loading, logout } = useAuth();
   const nav = useNavigate();
@@ -28,28 +37,40 @@ function AppShell() {
   if (loading) return <div className="shell center">A carregar…</div>;
   if (!user) return <Navigate to="/login" replace />;
 
+  const initials = user.name
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <div className="brand">FinTrack</div>
-        <p className="sidebar-user">{user.name}</p>
+        <Link className="brand" to="/app">
+          <span className="brand-mark">Kz</span>
+          FinTrack
+        </Link>
         <nav className="side-nav">
-          <Link to="/app">Dashboard</Link>
-          <Link to="/app/transactions">Transações</Link>
-          <Link to="/app/budgets">Orçamentos</Link>
-          <Link to="/app/recurring">Recorrências</Link>
-          <Link to="/app/goals">Objetivos</Link>
-          <Link to="/app/reports">Relatórios</Link>
+          <p className="nav-label">Gestão</p>
+          {NAV_ITEMS.map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end}>
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
+        <div className="sidebar-user">
+          <span className="avatar">{initials}</span>
+          <span>{user.name}</span>
+        </div>
         <button
-          className="btn btn-ghost"
+          className="btn btn-ghost btn-sm"
           type="button"
           onClick={async () => {
             await logout();
             nav('/');
           }}
         >
-          Sair
+          Terminar sessão
         </button>
       </aside>
       <main className="app-main">
@@ -98,7 +119,7 @@ export function DashboardPage() {
       {data && (
         <>
           <div className="kpi-row">
-            <article className="kpi">
+            <article className="kpi kpi-dark">
               <span>Saldo</span>
               <strong>{formatAOA(data.balance_cents)}</strong>
             </article>
@@ -124,16 +145,25 @@ export function DashboardPage() {
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#d7e0dc" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ece6da" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 11, fill: '#6f6a87' }}
+                        axisLine={{ stroke: '#e5dfd3' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: '#6f6a87' }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
                       <Tooltip
                         formatter={(v) => formatAOA(Math.round(Number(v) * 100))}
                         labelFormatter={(_, payload) =>
                           (payload?.[0]?.payload as { full?: string })?.full || ''
                         }
                       />
-                      <Bar dataKey="value" fill="#0f766e" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="#e4a11b" radius={[5, 5, 0, 0]} maxBarSize={52} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
