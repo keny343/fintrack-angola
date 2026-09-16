@@ -43,6 +43,29 @@ export const api = {
     request<BudgetsResponse>(`/api/budgets?year_month=${encodeURIComponent(yearMonth)}`),
   upsertBudget: (body: unknown) =>
     request<{ budget: unknown }>('/api/budgets', { method: 'PUT', body: JSON.stringify(body) }),
+  recurring: () => request<{ rules: RecurringRule[] }>('/api/recurring'),
+  createRecurring: (body: {
+    name: string;
+    account_id: number;
+    category_id: number;
+    type: 'income' | 'expense';
+    amount_cents: number;
+    day_of_month: number;
+    start_date: string;
+    end_date: string | null;
+  }) =>
+    request<{ rule: { id: number } }>('/api/recurring', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  toggleRecurring: (id: number, active: boolean) =>
+    request<{ rule: { id: number; active: boolean } }>(`/api/recurring/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ active }),
+    }),
+  deleteRecurring: (id: number) =>
+    request<{ ok: boolean }>(`/api/recurring/${id}`, { method: 'DELETE' }),
+  runRecurring: () => request<{ created: number }>('/api/recurring/run', { method: 'POST' }),
   goals: () => request<{ goals: Goal[] }>('/api/goals'),
   createGoal: (body: { name: string; target_cents: number; deadline: string | null }) =>
     request<{ goal: { id: number } }>('/api/goals', { method: 'POST', body: JSON.stringify(body) }),
@@ -88,6 +111,21 @@ export type Dashboard = {
     notes: string | null;
     category_name: string;
   }>;
+};
+
+export type RecurringRule = {
+  id: number;
+  name: string;
+  type: 'income' | 'expense';
+  amount_cents: number;
+  day_of_month: number;
+  start_date: string;
+  end_date: string | null;
+  active: boolean;
+  last_run_on: string | null;
+  category_name: string;
+  account_name: string;
+  next_occurrence: string | null;
 };
 
 export type GoalStatus = 'atingido' | 'em_dia' | 'em_risco' | 'sem_prazo';

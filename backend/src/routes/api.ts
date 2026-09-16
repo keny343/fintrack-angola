@@ -4,6 +4,8 @@ import { query } from '../db/pool.js';
 import { requireAuth, audit } from '../middleware/auth.js';
 import { assertPositiveCents, categoryMatchesType } from '../domain/money.js';
 import { goalProgress, monthlyPaceCents } from '../domain/goals.js';
+import { nextOccurrence } from '../domain/recurring.js';
+import { runRecurring } from '../services/recurring.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -258,6 +260,126 @@ router.get('/dashboard', async (req, res) => {
     by_category: byCategory.rows,
     recent: recent.rows,
   });
+});
+
+const recurringSchema = z.object({
+  name: z.string().min(2).max(120),
+  account_id: z.number().int().positive(),
+  category_id: z.number().int().positive(),
+  type: z.enum(['income', 'expense']),
+  amount_cents: z.number().int().positive(),
+  day_of_month: z.number().int().min(1).max(31),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .nullable(),
+});
+
+router.get('/recurring', async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const r = await query(
+    `SELECT r.id, r.name, r.type, r.amount_cents, r.day_of_month, r.start_date, r.end_date,
+            r.active, r.last_run_on, c.name AS category_name, a.name AS account_name
+     FROM recurring_transactions r
+     JOIN categories c ON c.id = r.category_id
+     JOIN accounts a ON a.id = r.account_id
+     WHERE r.user_id = $1
+     ORDER BY r.active DESC, r.day_of_month, r.id`,
+    [req.user!.id]
+  );
+
+  res.json({
+    rules: r.rows.map((rule) => {
+      const startDate = isoDate(rule.start_date)!;
+      const endDate = isoDate(rule.end_date);
+      return {
+        ...rule,
+        start_date: startDate,
+        end_date: endDate,
+        last_run_on: isoDate(rule.last_run_on),
+        next_occurrence: rule.active
+          ? nextOccurrence(
+              { dayOfMonth: rule.day_of_month, startDate, endDate },
+              today
+            )
+          : null,
+      };
+    }),
+  });
+});
+
+router.post('/recurring', async (req, res) => {
+  const parsed = recurringSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Dados da recorrência inválidos.' });
+  const data = parsed.data;
+  if (data.end_date && data.end_date < data.start_date) {
+    return res.status(400).json({ error: 'A data final não pode ser anterior ao início.' });
+  }
+
+  const acc = await query('SELECT id FROM accounts WHERE id = $1 AND user_id = $2', [
+    data.account_id,
+    req.user!.id,
+  ]);
+  if (!acc.rows.length) return res.status(400).json({ error: 'Conta inválida.' });
+
+  const cat = await query<{ kind: 'income' | 'expense' | 'both' }>(
+    'SELECT kind FROM categories WHERE id = $1 AND (user_id IS NULL OR user_id = $2)',
+    [data.category_id, req.user!.id]
+  );
+  if (!cat.rows.length) return res.status(400).json({ error: 'Categoria inválida.' });
+  if (!categoryMatchesType(cat.rows[0].kind, data.type)) {
+    return res.status(400).json({ error: 'Categoria incompatível com o tipo de transação.' });
+  }
+
+  const r = await query(
+    `INSERT INTO recurring_transactions
+       (user_id, account_id, category_id, name, type, amount_cents, day_of_month, start_date, end_date)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+     RETURNING id, name, type, amount_cents, day_of_month, start_date, end_date, active`,
+    [
+      req.user!.id,
+      data.account_id,
+      data.category_id,
+      data.name,
+      data.type,
+      data.amount_cents,
+      data.day_of_month,
+      data.start_date,
+      data.end_date ?? null,
+    ]
+  );
+  await audit(req.user!.id, 'RECURRING_CREATED', { id: r.rows[0].id });
+  res.status(201).json({ rule: r.rows[0] });
+});
+
+router.patch('/recurring/:id', async (req, res) => {
+  const parsed = z.object({ active: z.boolean() }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Estado inválido.' });
+  const r = await query(
+    'UPDATE recurring_transactions SET active = $1 WHERE id = $2 AND user_id = $3 RETURNING id, active',
+    [parsed.data.active, Number(req.params.id), req.user!.id]
+  );
+  if (!r.rows.length) return res.status(404).json({ error: 'Recorrência não encontrada.' });
+  await audit(req.user!.id, 'RECURRING_TOGGLED', { id: r.rows[0].id, active: r.rows[0].active });
+  res.json({ rule: r.rows[0] });
+});
+
+router.delete('/recurring/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const r = await query(
+    'DELETE FROM recurring_transactions WHERE id = $1 AND user_id = $2 RETURNING id',
+    [id, req.user!.id]
+  );
+  if (!r.rows.length) return res.status(404).json({ error: 'Recorrência não encontrada.' });
+  await audit(req.user!.id, 'RECURRING_DELETED', { id });
+  res.json({ ok: true });
+});
+
+router.post('/recurring/run', async (req, res) => {
+  const result = await runRecurring(req.user!.id);
+  res.json(result);
 });
 
 const goalSchema = z.object({

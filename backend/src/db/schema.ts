@@ -71,6 +71,30 @@ CREATE TABLE IF NOT EXISTS goal_contributions (
 );
 CREATE INDEX IF NOT EXISTS idx_goal_contrib_goal ON goal_contributions(goal_id, occurred_on);
 
+CREATE TABLE IF NOT EXISTS recurring_transactions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  day_of_month SMALLINT NOT NULL CHECK (day_of_month BETWEEN 1 AND 31),
+  start_date DATE NOT NULL,
+  end_date DATE,
+  active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_run_on DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_recurring_user ON recurring_transactions(user_id, active);
+
+ALTER TABLE transactions
+  ADD COLUMN IF NOT EXISTS recurring_id INTEGER
+  REFERENCES recurring_transactions(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_tx_recurring_date
+  ON transactions(recurring_id, occurred_on)
+  WHERE recurring_id IS NOT NULL;
+
 CREATE TABLE IF NOT EXISTS audit_events (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,

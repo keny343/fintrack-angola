@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
 import { audit, cookieOptions, requireAuth, signToken } from '../middleware/auth.js';
+import { runRecurring } from '../services/recurring.js';
 
 const router = Router();
 
@@ -62,6 +63,12 @@ router.post('/login', async (req, res) => {
   const user = { id: row.id, email: row.email, name: row.name };
   res.cookie('token', signToken(user), cookieOptions());
   await audit(user.id, 'USER_LOGIN');
+  // Catching up on recurring rules must never block a successful login.
+  try {
+    await runRecurring(user.id);
+  } catch (err) {
+    console.error('recurring catch-up failed', err);
+  }
   return res.json({ user });
 });
 

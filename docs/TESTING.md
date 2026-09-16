@@ -44,6 +44,14 @@ Finance (`src/routes/api.test.ts`):
 - **User isolation**: another account cannot list or delete a user's transactions, sees a zero
   balance, cannot post to a foreign account, and cannot see private categories
 
+Recurring transactions (`src/routes/recurring.test.ts`):
+
+- One transaction per due month, and repeated runs create no duplicates
+- Day 31 rules land on 28/29/30 in shorter months
+- Paused rules generate nothing; `next_occurrence` reflects the paused state
+- Deleting a rule keeps the transactions it already generated
+- **User isolation**: rules cannot be listed, paused, or deleted by another account
+
 Goals (`src/routes/goals.test.ts`):
 
 - Progress, remaining amount, and required monthly deposit until the deadline
@@ -56,6 +64,12 @@ period totals, category/type compatibility.
 
 Domain (`src/domain/goals.test.ts`): calendar-month arithmetic, observed monthly pace,
 and the on-track/at-risk decision.
+
+Domain (`src/domain/recurring.test.ts`): day-of-month clamping, due occurrences within the
+rule window, and the next scheduled date.
+
+API suites run one file at a time (`fileParallelism: false`) because each boots its own PGlite
+engine.
 
 ## Quality bar
 

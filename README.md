@@ -39,6 +39,7 @@ Details: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | Dashboard | Balance, month income/expense, chart, recent activity |
 | Reports | Totals by category for a date range |
 | Goals | Savings targets with contributions, required monthly pace, on-track status |
+| Recurring | Monthly rules (rent, salary, tuition) with idempotent catch-up on login |
 
 ## Quick start
 
@@ -81,7 +82,7 @@ See [`docs/SECURITY.md`](./docs/SECURITY.md).
 ## Roadmap
 
 - [x] Savings goals
-- [ ] Recurring transactions
+- [x] Recurring transactions
 - [ ] CSV import/export
 - [ ] Live deploy (Vercel + Render)
 - [ ] Optional AI insights layer (deterministic metrics first)

@@ -28,6 +28,18 @@ Sets httpOnly cookie `token`.
 - `GET /api/dashboard?year_month=YYYY-MM`
 - `GET /api/reports/by-category?from=YYYY-MM-DD&to=YYYY-MM-DD`
 
+## Recurring transactions (auth required)
+
+- `GET /api/recurring` → rules with `next_occurrence`, `last_run_on`, `active`
+- `POST /api/recurring` `{ name, account_id, category_id, type, amount_cents, day_of_month, start_date, end_date? }`
+- `PATCH /api/recurring/:id` `{ active }` — pause or resume a rule
+- `DELETE /api/recurring/:id` — already generated transactions are kept (`recurring_id` becomes null)
+- `POST /api/recurring/run` → `{ created }` materializes anything still due
+
+Rules fire monthly on `day_of_month`, clamped to the last day of shorter months (31 → 28/29/30),
+so no month is skipped. Catch-up also runs automatically on login, and is idempotent thanks to a
+unique index on `(recurring_id, occurred_on)`.
+
 ## Goals (auth required)
 
 - `GET /api/goals` → each goal includes `saved_cents`, `percent`, `remainingCents`,

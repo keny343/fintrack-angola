@@ -16,6 +16,7 @@ import {
   type Dashboard,
   type Goal,
   type GoalStatus,
+  type RecurringRule,
   type Transaction,
 } from '../services/api';
 import { currentYearMonth, formatAOA, formatDateAO, parseAOAInput } from '../utils/money';
@@ -36,6 +37,7 @@ function AppShell() {
           <Link to="/app">Dashboard</Link>
           <Link to="/app/transactions">Transações</Link>
           <Link to="/app/budgets">Orçamentos</Link>
+          <Link to="/app/recurring">Recorrências</Link>
           <Link to="/app/goals">Objetivos</Link>
           <Link to="/app/reports">Relatórios</Link>
         </nav>
@@ -416,6 +418,226 @@ export function BudgetsPage() {
         {data && data.budgets.length === 0 && (
           <p className="muted">Define o primeiro orçamento do mês.</p>
         )}
+      </div>
+    </section>
+  );
+}
+
+export function RecurringPage() {
+  const [rules, setRules] = useState<RecurringRule[]>([]);
+  const [accounts, setAccounts] = useState<Array<{ id: number; name: string }>>([]);
+  const [categories, setCategories] = useState<Array<{ id: number; name: string; kind: string }>>(
+    []
+  );
+  const [name, setName] = useState('');
+  const [type, setType] = useState<'income' | 'expense'>('expense');
+  const [accountId, setAccountId] = useState(0);
+  const [categoryId, setCategoryId] = useState(0);
+  const [amount, setAmount] = useState('');
+  const [dayOfMonth, setDayOfMonth] = useState('5');
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState('');
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+
+  async function load() {
+    const [list, acc, cat] = await Promise.all([api.recurring(), api.accounts(), api.categories()]);
+    setRules(list.rules);
+    setAccounts(acc.accounts);
+    setCategories(cat.categories);
+    if (!accountId && acc.accounts[0]) setAccountId(acc.accounts[0].id);
+  }
+
+  useEffect(() => {
+    load().catch((e) => setError((e as Error).message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const filteredCats = categories.filter((c) => c.kind === type || c.kind === 'both');
+
+  async function onCreate(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    setStatus('');
+    try {
+      await api.createRecurring({
+        name,
+        account_id: accountId,
+        category_id: categoryId || filteredCats[0]?.id,
+        type,
+        amount_cents: parseAOAInput(amount),
+        day_of_month: Number(dayOfMonth),
+        start_date: startDate,
+        end_date: endDate || null,
+      });
+      setName('');
+      setAmount('');
+      setEndDate('');
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function onRun() {
+    setError('');
+    try {
+      const r = await api.runRecurring();
+      setStatus(
+        r.created === 0
+          ? 'Nada em atraso: todas as recorrências já estão lançadas.'
+          : `${r.created} transação(ões) lançada(s).`
+      );
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  return (
+    <section>
+      <header className="page-head">
+        <div>
+          <h1>Recorrências</h1>
+          <p className="muted">Lançamentos mensais fixos: renda, salário, propinas</p>
+        </div>
+        <button className="btn btn-ghost btn-sm" type="button" onClick={onRun}>
+          Lançar em atraso
+        </button>
+      </header>
+      {error && <div className="alert">{error}</div>}
+      {status && <div className="notice">{status}</div>}
+      <form className="panel form-grid" onSubmit={onCreate}>
+        <label>
+          Descrição
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Renda da casa"
+            required
+            minLength={2}
+          />
+        </label>
+        <label>
+          Tipo
+          <select
+            value={type}
+            onChange={(e) => {
+              setType(e.target.value as 'income' | 'expense');
+              setCategoryId(0);
+            }}
+          >
+            <option value="expense">Despesa</option>
+            <option value="income">Receita</option>
+          </select>
+        </label>
+        <label>
+          Conta
+          <select value={accountId} onChange={(e) => setAccountId(Number(e.target.value))}>
+            {accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Categoria
+          <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))}>
+            {filteredCats.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Valor (Kz)
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="150000" required />
+        </label>
+        <label>
+          Dia do mês
+          <input
+            type="number"
+            min={1}
+            max={31}
+            value={dayOfMonth}
+            onChange={(e) => setDayOfMonth(e.target.value)}
+            required
+          />
+        </label>
+        <label>
+          Início
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+        </label>
+        <label>
+          Fim (opcional)
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        </label>
+        <button className="btn btn-primary" type="submit">
+          Criar recorrência
+        </button>
+      </form>
+      <div className="panel">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Descrição</th>
+              <th>Categoria</th>
+              <th>Dia</th>
+              <th>Valor</th>
+              <th>Próximo</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {rules.map((r) => (
+              <tr key={r.id} className={r.active ? undefined : 'row-muted'}>
+                <td>
+                  {r.name}
+                  {!r.active && <span className="tag"> Pausada</span>}
+                </td>
+                <td>
+                  {r.category_name} · {r.account_name}
+                </td>
+                <td>{r.day_of_month}</td>
+                <td className={r.type === 'income' ? 'pos' : 'neg'}>
+                  {r.type === 'income' ? '+' : '−'} {formatAOA(r.amount_cents)}
+                </td>
+                <td>{r.next_occurrence ? formatDateAO(r.next_occurrence) : '—'}</td>
+                <td className="right">
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    type="button"
+                    onClick={async () => {
+                      await api.toggleRecurring(r.id, !r.active);
+                      await load();
+                    }}
+                  >
+                    {r.active ? 'Pausar' : 'Retomar'}
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    type="button"
+                    onClick={async () => {
+                      await api.deleteRecurring(r.id);
+                      await load();
+                    }}
+                  >
+                    Apagar
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {rules.length === 0 && (
+              <tr>
+                <td colSpan={6} className="muted">
+                  Sem recorrências. Cria a primeira (ex.: renda no dia 5).
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </section>
   );
