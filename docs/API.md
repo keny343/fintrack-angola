@@ -28,6 +28,25 @@ Sets httpOnly cookie `token`.
 - `GET /api/dashboard?year_month=YYYY-MM`
 - `GET /api/reports/by-category?from=YYYY-MM-DD&to=YYYY-MM-DD`
 
+## Insights (auth required)
+
+- `GET /api/insights?year_month=YYYY-MM` → `{ year_month, metrics, insights }`
+
+`metrics` holds the month read in numbers: income, expense, net, saving rate, the change against
+the previous month, the fixed bills not yet charged, and the largest expense category with its
+share. `insights` is the same data turned into at most six sentences, each with an `id`, a
+`severity` (`risk` | `warn` | `info` | `good`), the text, and the `facts` behind it.
+
+What it looks at: a negative month or the share of income kept, budgets already broken and budgets
+above 80% of the limit, categories that grew at least 40% **and** at least 10.000 Kz against last
+month, recurring expenses still due before month end against what is left, goals flagged
+`em_risco`, and a single category taking 40% or more of the month.
+
+Every figure is computed in SQL and in
+[`backend/src/domain/insights.ts`](../backend/src/domain/insights.ts), which is a pure function over
+those numbers — no estimates, no rounding before a comparison. If a language model is plugged in
+later to phrase these differently, `facts` is the only thing it is allowed to talk about.
+
 ## CSV import and export (auth required)
 
 - `GET /api/transactions/export?from&to&type&category_id` → `text/csv` attachment with the same

@@ -66,6 +66,8 @@ export const api = {
   },
   dashboard: (yearMonth: string) =>
     request<Dashboard>(`/api/dashboard?year_month=${encodeURIComponent(yearMonth)}`),
+  insights: (yearMonth: string) =>
+    request<InsightsResponse>(`/api/insights?year_month=${encodeURIComponent(yearMonth)}`),
   budgets: (yearMonth: string) =>
     request<BudgetsResponse>(`/api/budgets?year_month=${encodeURIComponent(yearMonth)}`),
   upsertBudget: (body: unknown) =>
@@ -109,6 +111,32 @@ export const api = {
     request<{ rows: Array<{ name: string; type: string; total_cents: number }> }>(
       `/api/reports/by-category?from=${from}&to=${to}`
     ),
+};
+
+export type InsightSeverity = 'risk' | 'warn' | 'info' | 'good';
+
+export type Insight = {
+  id: string;
+  severity: InsightSeverity;
+  title: string;
+  detail: string;
+  facts: Record<string, string | number>;
+};
+
+export type InsightsResponse = {
+  year_month: string;
+  metrics: {
+    income_cents: number;
+    expense_cents: number;
+    net_cents: number;
+    saving_rate: number | null;
+    previous_expense_cents: number;
+    expense_change_percent: number | null;
+    commitments_due_cents: number;
+    available_after_commitments_cents: number;
+    top_category: { name: string; amount_cents: number; share_percent: number } | null;
+  };
+  insights: Insight[];
 };
 
 export type ImportIssue = { line: number; message: string };

@@ -3,8 +3,10 @@ import {
   ArrowsDownUp,
   ChartBar,
   Check,
+  CheckCircle,
   DownloadSimple,
   Flag,
+  Info,
   Minus,
   Pause,
   Play,
@@ -17,6 +19,7 @@ import {
   TrendDown,
   TrendUp,
   UploadSimple,
+  Warning,
   WarningCircle,
   type Icon,
 } from '@phosphor-icons/react';
@@ -40,6 +43,8 @@ import {
   type Goal,
   type GoalStatus,
   type ImportReport,
+  type Insight,
+  type InsightSeverity,
   type RecurringRule,
   type Transaction,
 } from '../services/api';
@@ -278,10 +283,41 @@ function AppShell() {
   );
 }
 
+const INSIGHT_ICON: Record<InsightSeverity, Icon> = {
+  risk: WarningCircle,
+  warn: Warning,
+  info: Info,
+  good: CheckCircle,
+};
+
+/**
+ * Reads back the month in words. Every number shown here comes from the API,
+ * which computes it from the user's own transactions.
+ */
+function InsightList({ insights }: { insights: Insight[] }) {
+  return (
+    <ul className="insight-list stagger">
+      {insights.map((insight) => {
+        const IconFor = INSIGHT_ICON[insight.severity];
+        return (
+          <li key={insight.id} className={`insight insight-${insight.severity}`}>
+            <IconFor size={18} aria-hidden="true" />
+            <div>
+              <b>{insight.title}</b>
+              <p>{insight.detail}</p>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function DashboardPage() {
   const { theme } = useTheme();
   const [ym, setYm] = useState(currentYearMonth());
   const [data, setData] = useState<Dashboard | null>(null);
+  const [insights, setInsights] = useState<Insight[] | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -290,6 +326,11 @@ export function DashboardPage() {
       .dashboard(ym)
       .then(setData)
       .catch((e) => setError((e as Error).message));
+    // Insights are a read-only extra: a failure here must not blank the month.
+    api
+      .insights(ym)
+      .then((res) => setInsights(res.insights))
+      .catch(() => setInsights([]));
   }, [ym]);
 
   const chartData = useMemo(
@@ -351,6 +392,12 @@ export function DashboardPage() {
               <strong>{formatAOA(data.net_cents)}</strong>
             </article>
           </div>
+          {insights && insights.length > 0 && (
+            <div className="panel">
+              <h2>O que os teus números dizem</h2>
+              <InsightList insights={insights} />
+            </div>
+          )}
           <div className="split">
             <div className="panel">
               <h2>Despesas por categoria</h2>

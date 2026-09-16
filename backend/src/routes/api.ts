@@ -5,6 +5,7 @@ import { requireAuth, audit } from '../middleware/auth.js';
 import { assertPositiveCents, categoryMatchesType } from '../domain/money.js';
 import { formatCentsForCsv, toCsv } from '../domain/csv.js';
 import { commitImport, MAX_IMPORT_ROWS, prepareImport } from '../services/csvImport.js';
+import { monthInsights } from '../services/insights.js';
 import { goalProgress, monthlyPaceCents } from '../domain/goals.js';
 import { nextOccurrence } from '../domain/recurring.js';
 import { runRecurring } from '../services/recurring.js';
@@ -345,6 +346,16 @@ router.get('/dashboard', async (req, res) => {
     by_category: byCategory.rows,
     recent: recent.rows,
   });
+});
+
+router.get('/insights', async (req, res) => {
+  const yearMonth =
+    typeof req.query.year_month === 'string' && /^\d{4}-\d{2}$/.test(req.query.year_month)
+      ? req.query.year_month
+      : new Date().toISOString().slice(0, 7);
+
+  const { metrics, insights } = await monthInsights(req.user!.id, yearMonth);
+  res.json({ year_month: yearMonth, metrics, insights });
 });
 
 const recurringSchema = z.object({

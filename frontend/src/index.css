@@ -800,6 +800,74 @@ td .tag {
 }
 
 /* ==========================================================================
+   Insights
+   ========================================================================== */
+
+.insight-list {
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.insight {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.insight b {
+  display: block;
+  font-size: 0.94rem;
+  margin-bottom: 0.15rem;
+}
+
+.insight p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+/* Severity only ever colours the rule and the icon: the text stays readable. */
+.insight svg {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.insight-risk {
+  border-left-color: var(--neg);
+}
+
+.insight-risk svg {
+  color: var(--neg);
+}
+
+.insight-warn {
+  border-left-color: var(--primary);
+}
+
+.insight-warn svg {
+  color: var(--primary);
+}
+
+.insight-good {
+  border-left-color: var(--pos);
+}
+
+.insight-good svg {
+  color: var(--pos);
+}
+
+.insight-info svg {
+  color: var(--muted);
+}
+
+/* ==========================================================================
    CSV import
    ========================================================================== */
 

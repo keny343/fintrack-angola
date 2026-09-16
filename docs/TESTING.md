@@ -59,6 +59,14 @@ Goals (`src/routes/goals.test.ts`):
 - Invalid targets, dates, and contribution amounts are rejected
 - **User isolation**: goals, contributions, and deletion are restricted to the owner
 
+Insights (`src/routes/insights.test.ts`):
+
+- An empty month is told apart from a month with movements
+- Metrics come from the caller's own transactions, budgets of the requested month included
+- The month is compared against the previous one
+- Only fixed bills still ahead of today count towards what is due
+- **User isolation**: another account's numbers never reach the insights
+
 CSV import and export (`src/routes/csv.test.ts`):
 
 - A valid file lands the amounts in centavos, including `25.000,50` written the pt way
@@ -72,6 +80,12 @@ CSV import and export (`src/routes/csv.test.ts`):
 Domain (`src/domain/csv.test.ts`): delimiter detection, quoted fields with embedded separators and
 doubled quotes, BOM and CRLF handling, header normalisation, Angolan and ISO dates (including the
 rejection of 31/02), amount formatting with a decimal comma, and CSV escaping on the way out.
+
+Domain (`src/domain/insights.test.ts`): each rule in isolation — saving rate, negative month,
+spending without income, budget overruns and near-limit warnings, category jumps (including the
+ones ignored for being large in percentage but small in Kwanzas), fixed bills that do or do not fit
+in what is left, goals behind pace, category concentration, severity ordering, the six-insight cap,
+and percentages written with a comma.
 
 Domain (`src/domain/money.test.ts`): centavos validation, AOA formatting, budget progress,
 period totals, category/type compatibility.
