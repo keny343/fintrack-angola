@@ -277,7 +277,8 @@ export function LandingPage() {
             <p className="eyebrow">Como funciona</p>
             <h2>Três passos e já vês o teu mês.</h2>
             <p>
-              Não precisas de saber nada de contabilidade nem de importar ficheiros para começar.
+              Não precisas de saber nada de contabilidade. E se já tens tudo numa folha de Excel,
+              trazes de uma vez.
             </p>
           </div>
           <Reveal>
@@ -293,7 +294,8 @@ export function LandingPage() {
                 <b>02</b>
                 <h3>Lança o salário e as contas fixas</h3>
                 <p>
-                  A renda, as propinas e a luz que pagas todos os meses passam a entrar sozinhas.
+                  A renda, as propinas e a luz passam a entrar sozinhas. Já tens meses numa folha de
+                  Excel? Importas o ficheiro e ficas em dia.
                 </p>
               </div>
               <div className="step">

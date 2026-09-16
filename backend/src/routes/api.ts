@@ -1,8 +1,10 @@
-import { Router } from 'express';
+import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
 import { requireAuth, audit } from '../middleware/auth.js';
 import { assertPositiveCents, categoryMatchesType } from '../domain/money.js';
+import { formatCentsForCsv, toCsv } from '../domain/csv.js';
+import { commitImport, MAX_IMPORT_ROWS, prepareImport } from '../services/csvImport.js';
 import { goalProgress, monthlyPaceCents } from '../domain/goals.js';
 import { nextOccurrence } from '../domain/recurring.js';
 import { runRecurring } from '../services/recurring.js';
@@ -57,7 +59,8 @@ const txSchema = z.object({
   notes: z.string().max(500).optional().nullable(),
 });
 
-router.get('/transactions', async (req, res) => {
+/** Shared by the transaction list and the CSV export. */
+function transactionFilters(req: Request): { where: string[]; params: unknown[] } {
   const from = typeof req.query.from === 'string' ? req.query.from : null;
   const to = typeof req.query.to === 'string' ? req.query.to : null;
   const type = typeof req.query.type === 'string' ? req.query.type : null;
@@ -80,6 +83,11 @@ router.get('/transactions', async (req, res) => {
     params.push(categoryId);
     where.push(`t.category_id = $${params.length}`);
   }
+  return { where, params };
+}
+
+router.get('/transactions', async (req, res) => {
+  const { where, params } = transactionFilters(req);
   const r = await query(
     `SELECT t.*, c.name AS category_name, a.name AS account_name
      FROM transactions t
@@ -132,6 +140,83 @@ router.post('/transactions', async (req, res) => {
   );
   await audit(req.user!.id, 'TRANSACTION_CREATED', { id: r.rows[0].id });
   res.status(201).json({ transaction: r.rows[0] });
+});
+
+router.get('/transactions/export', async (req, res) => {
+  const { where, params } = transactionFilters(req);
+  const r = await query<{
+    occurred_on: string;
+    type: 'income' | 'expense';
+    category_name: string;
+    account_name: string;
+    amount_cents: number;
+    notes: string | null;
+  }>(
+    `SELECT t.occurred_on, t.type, t.amount_cents, t.notes,
+            c.name AS category_name, a.name AS account_name
+     FROM transactions t
+     JOIN categories c ON c.id = t.category_id
+     JOIN accounts a ON a.id = t.account_id
+     WHERE ${where.join(' AND ')}
+     ORDER BY t.occurred_on, t.id`,
+    params
+  );
+
+  const csv = toCsv(
+    ['Data', 'Tipo', 'Categoria', 'Conta', 'Valor (Kz)', 'Notas'],
+    r.rows.map((row) => [
+      row.occurred_on.split('-').reverse().join('/'),
+      row.type === 'income' ? 'Receita' : 'Despesa',
+      row.category_name,
+      row.account_name,
+      formatCentsForCsv(row.amount_cents),
+      row.notes ?? '',
+    ])
+  );
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  await audit(req.user!.id, 'TRANSACTIONS_EXPORTED', { rows: r.rows.length });
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="fintrack-${stamp}.csv"`);
+  res.send(csv);
+});
+
+router.post('/transactions/import', async (req, res) => {
+  const schema = z.object({
+    csv: z.string().min(1).max(500_000),
+    dry_run: z.boolean().optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'Envia o conteúdo do ficheiro CSV.' });
+  }
+
+  let report;
+  try {
+    report = await prepareImport(req.user!.id, parsed.data.csv);
+  } catch (e) {
+    return res.status(400).json({ error: (e as Error).message });
+  }
+
+  const summary = {
+    total: report.total,
+    valid: report.valid,
+    issues: report.issues,
+    max_rows: MAX_IMPORT_ROWS,
+  };
+
+  if (parsed.data.dry_run) {
+    return res.json({ ...summary, imported: 0, dry_run: true });
+  }
+
+  // One bad line blocks the whole file: a half-imported month is worse than none.
+  if (report.issues.length) {
+    return res.status(422).json({ ...summary, imported: 0 });
+  }
+
+  const { imported } = await commitImport(req.user!.id, report.rows);
+  await audit(req.user!.id, 'TRANSACTIONS_IMPORTED', { imported });
+  res.status(201).json({ ...summary, imported });
 });
 
 router.delete('/transactions/:id', async (req, res) => {

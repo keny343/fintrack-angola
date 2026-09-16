@@ -2,6 +2,8 @@ import {
   ArrowsClockwise,
   ArrowsDownUp,
   ChartBar,
+  Check,
+  DownloadSimple,
   Flag,
   Minus,
   Pause,
@@ -14,10 +16,11 @@ import {
   Trash,
   TrendDown,
   TrendUp,
+  UploadSimple,
   WarningCircle,
   type Icon,
 } from '@phosphor-icons/react';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import {
   Bar,
@@ -36,6 +39,7 @@ import {
   type Dashboard,
   type Goal,
   type GoalStatus,
+  type ImportReport,
   type RecurringRule,
   type Transaction,
 } from '../services/api';
@@ -50,6 +54,156 @@ const NAV_ITEMS: Array<{ to: string; label: string; icon: Icon; end?: boolean }>
   { to: '/app/goals', label: 'Objetivos', icon: Flag },
   { to: '/app/reports', label: 'Relatórios', icon: ChartBar },
 ];
+
+const CSV_TEMPLATE = [
+  'Data;Tipo;Categoria;Conta;Valor (Kz);Notas',
+  '05/09/2026;Despesa;Energia;Numerário;25000,50;Luz de Setembro',
+  '01/09/2026;Receita;Salário;Numerário;450000,00;',
+].join('\r\n');
+
+/** CSV import: pick a file, see what will happen, then confirm. */
+function CsvImportPanel({ onImported }: { onImported: () => Promise<void> }) {
+  const [csv, setCsv] = useState('');
+  const [report, setReport] = useState<ImportReport | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function reset() {
+    setCsv('');
+    setReport(null);
+    if (inputRef.current) inputRef.current.value = '';
+  }
+
+  async function onPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError('');
+    setDone('');
+    setBusy(true);
+    try {
+      const text = await file.text();
+      setCsv(text);
+      setReport(await api.importTransactions(text, true));
+    } catch (err) {
+      setError((err as Error).message);
+      reset();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onConfirm() {
+    setBusy(true);
+    setError('');
+    try {
+      const result = await api.importTransactions(csv, false);
+      if (result.issues.length) {
+        setReport(result);
+        return;
+      }
+      setDone(`${result.imported} movimento(s) importado(s).`);
+      reset();
+      await onImported();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function downloadTemplate() {
+    const blob = new Blob([`\uFEFF${CSV_TEMPLATE}\r\n`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'modelo-fintrack.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const blocked = report ? report.issues.length > 0 : false;
+
+  return (
+    <div className="panel import-panel">
+      <div className="import-head">
+        <div>
+          <h2>Importar de um ficheiro CSV</h2>
+          <p className="muted">
+            Colunas necessárias: <strong>Data</strong>, <strong>Tipo</strong>,{' '}
+            <strong>Categoria</strong> e <strong>Valor</strong>. Conta e Notas são opcionais. Datas
+            em dd/mm/aaaa e valores como 25000,50.
+          </p>
+        </div>
+        <button className="btn btn-ghost btn-sm" type="button" onClick={downloadTemplate}>
+          <DownloadSimple size={14} aria-hidden="true" />
+          Modelo CSV
+        </button>
+      </div>
+
+      <div className="import-actions">
+        <label className="file-field">
+          <span>Ficheiro</span>
+          <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={onPick} />
+        </label>
+        {busy && <span className="muted">A verificar o ficheiro…</span>}
+      </div>
+
+      <ErrorAlert message={error} />
+      <div aria-live="polite">
+        {done && (
+          <div className="notice">
+            <Check size={18} aria-hidden="true" />
+            <span>{done}</span>
+          </div>
+        )}
+        {report && (
+          <div className={blocked ? 'import-report blocked' : 'import-report'}>
+            <p>
+              {report.total} linha(s) lida(s) · <strong>{report.valid}</strong> pronta(s) a importar
+              {blocked && ` · ${report.issues.length} com problema`}
+            </p>
+            {blocked ? (
+              <>
+                <p className="muted">
+                  Nada é importado enquanto houver linhas com problemas. Corrige o ficheiro e
+                  escolhe-o outra vez.
+                </p>
+                <ul className="issue-list">
+                  {report.issues.slice(0, 8).map((issue) => (
+                    <li key={issue.line}>
+                      <span className="num">Linha {issue.line}</span>
+                      {issue.message}
+                    </li>
+                  ))}
+                  {report.issues.length > 8 && (
+                    <li className="muted">e mais {report.issues.length - 8}…</li>
+                  )}
+                </ul>
+              </>
+            ) : (
+              <div className="goal-actions">
+                <button
+                  className="btn btn-primary btn-sm"
+                  type="button"
+                  onClick={onConfirm}
+                  disabled={busy || report.valid === 0}
+                >
+                  <UploadSimple size={14} aria-hidden="true" />
+                  Importar {report.valid} movimento(s)
+                </button>
+                <button className="btn btn-ghost btn-sm" type="button" onClick={reset}>
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function ErrorAlert({ message }: { message: string }) {
   return (
@@ -318,6 +472,16 @@ export function TransactionsPage() {
     }
   }
 
+  async function onExport() {
+    setError('');
+    try {
+      // The export mirrors what the list is showing, filter included.
+      await api.downloadTransactionsCsv(filterType ? `?type=${filterType}` : '');
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   return (
     <section>
       <header className="page-head">
@@ -325,14 +489,20 @@ export function TransactionsPage() {
           <h1>Transações</h1>
           <p className="muted">Receitas e despesas em centavos (AOA)</p>
         </div>
-        <label className="inline-field">
-          Filtrar
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-            <option value="">Todas</option>
-            <option value="income">Receitas</option>
-            <option value="expense">Despesas</option>
-          </select>
-        </label>
+        <div className="head-actions">
+          <label className="inline-field">
+            Filtrar
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <option value="">Todas</option>
+              <option value="income">Receitas</option>
+              <option value="expense">Despesas</option>
+            </select>
+          </label>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={onExport}>
+            <DownloadSimple size={14} aria-hidden="true" />
+            Exportar CSV
+          </button>
+        </div>
       </header>
       <ErrorAlert message={error} />
       <form className="panel form-grid" onSubmit={onCreate}>
@@ -394,6 +564,7 @@ export function TransactionsPage() {
           Adicionar
         </button>
       </form>
+      <CsvImportPanel onImported={load} />
       <div className="panel table-wrap">
         <table>
           <thead>

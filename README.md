@@ -41,6 +41,7 @@ Details: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | Reports | Totals by category for a date range |
 | Goals | Savings targets with contributions, required monthly pace, on-track status |
 | Recurring | Monthly rules (rent, salary, tuition) with idempotent catch-up on login |
+| CSV | Export with the current filters; import with a per-line preview, all-or-nothing |
 
 ## Quick start
 
@@ -91,7 +92,7 @@ See [`docs/DESIGN.md`](./docs/DESIGN.md).
 
 - [x] Savings goals
 - [x] Recurring transactions
-- [ ] CSV import/export
+- [x] CSV import/export
 - [ ] Live deploy (Vercel + Render)
 - [ ] Optional AI insights layer (deterministic metrics first)
 

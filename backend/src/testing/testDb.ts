@@ -8,7 +8,9 @@ import { seedSystemCategories } from '../db/systemCategories.js';
  * categories, and routes the app's SQL through it. No Docker or server needed.
  */
 export async function startTestDb() {
-  const db = new PGlite();
+  // Keep DATE columns as 'YYYY-MM-DD' strings, matching the parser the pg
+  // driver uses in production (see db/pool.ts).
+  const db = new PGlite({ parsers: { 1082: (value: string) => value } });
   await db.exec(SCHEMA_SQL);
 
   setQueryExecutor(async (text, params) => {

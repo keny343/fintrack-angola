@@ -28,6 +28,27 @@ Sets httpOnly cookie `token`.
 - `GET /api/dashboard?year_month=YYYY-MM`
 - `GET /api/reports/by-category?from=YYYY-MM-DD&to=YYYY-MM-DD`
 
+## CSV import and export (auth required)
+
+- `GET /api/transactions/export?from&to&type&category_id` → `text/csv` attachment with the same
+  filters as the transaction list
+- `POST /api/transactions/import` `{ csv, dry_run? }` → `{ total, valid, imported, issues, max_rows }`
+
+The export writes `Data;Tipo;Categoria;Conta;Valor (Kz);Notas`, semicolon-separated with a decimal
+comma and a UTF-8 BOM, which is what Excel needs to read `Habitação` correctly. An exported file is
+a valid import file.
+
+The import accepts up to 1000 rows. `Data`, `Tipo`, `Categoria` and `Valor` are required; `Conta`
+(defaults to the user's first account) and `Notas` are optional. Column names are matched without
+accents or case, dates in `dd/mm/aaaa` or `aaaa-mm-dd`, and amounts as written in a pt spreadsheet
+(`25.000,50`). The delimiter is detected per file, so comma-separated exports from other tools work
+too.
+
+Validation runs against the caller's own accounts and categories. If any line fails, the response is
+`422` with the line number and reason for each problem and **nothing is written** — a half-imported
+month is worse than none. `dry_run: true` returns the same report without importing, which is what
+the UI shows before asking for confirmation.
+
 ## Recurring transactions (auth required)
 
 - `GET /api/recurring` → rules with `next_occurrence`, `last_run_on`, `active`

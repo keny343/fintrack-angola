@@ -37,6 +37,33 @@ export const api = {
     }),
   deleteTransaction: (id: number) =>
     request<{ ok: boolean }>(`/api/transactions/${id}`, { method: 'DELETE' }),
+  importTransactions: async (csv: string, dryRun: boolean): Promise<ImportReport> => {
+    const res = await fetch(`${API_URL}/api/transactions/import`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv, dry_run: dryRun }),
+    });
+    const data = await res.json().catch(() => ({}));
+    // 422 carries the per-line report the UI needs to show, so it is not an error here.
+    if (!res.ok && res.status !== 422) {
+      throw new Error((data as { error?: string }).error || 'Importação falhou');
+    }
+    return data as ImportReport;
+  },
+  downloadTransactionsCsv: async (q: string): Promise<void> => {
+    const res = await fetch(`${API_URL}/api/transactions/export${q}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Não foi possível exportar os movimentos.');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fintrack-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
   dashboard: (yearMonth: string) =>
     request<Dashboard>(`/api/dashboard?year_month=${encodeURIComponent(yearMonth)}`),
   budgets: (yearMonth: string) =>
@@ -82,6 +109,17 @@ export const api = {
     request<{ rows: Array<{ name: string; type: string; total_cents: number }> }>(
       `/api/reports/by-category?from=${from}&to=${to}`
     ),
+};
+
+export type ImportIssue = { line: number; message: string };
+
+export type ImportReport = {
+  total: number;
+  valid: number;
+  imported: number;
+  issues: ImportIssue[];
+  max_rows?: number;
+  dry_run?: boolean;
 };
 
 export type Transaction = {

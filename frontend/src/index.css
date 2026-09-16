@@ -800,6 +800,123 @@ td .tag {
 }
 
 /* ==========================================================================
+   CSV import
+   ========================================================================== */
+
+.head-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.import-panel {
+  margin-bottom: var(--space-4);
+}
+
+.import-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.import-head h2 {
+  font-size: 1rem;
+  margin-bottom: 0.2rem;
+}
+
+.import-head p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.85rem;
+}
+
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.file-field {
+  display: grid;
+  gap: var(--space-1);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.file-field input {
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+}
+
+.file-field input::file-selector-button {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-right: 0.6rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.file-field input::file-selector-button:hover {
+  border-color: var(--primary);
+}
+
+.import-report {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.9rem;
+  animation: rise var(--dur-enter) var(--ease-out) both;
+}
+
+/* A blocked import is not an error the user caused by clicking: warn, don't alarm. */
+.import-report.blocked {
+  border-left-color: var(--neg);
+}
+
+.import-report p {
+  margin: 0 0 var(--space-2);
+}
+
+.import-report p:last-child {
+  margin-bottom: 0;
+}
+
+.issue-list {
+  list-style: none;
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.issue-list li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.issue-list .num {
+  flex: 0 0 auto;
+  min-width: 5.5rem;
+  color: var(--neg);
+  font-weight: 600;
+}
+
+/* ==========================================================================
    Auth — split layout
    ========================================================================== */
 

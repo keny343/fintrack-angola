@@ -59,6 +59,20 @@ Goals (`src/routes/goals.test.ts`):
 - Invalid targets, dates, and contribution amounts are rejected
 - **User isolation**: goals, contributions, and deletion are restricted to the owner
 
+CSV import and export (`src/routes/csv.test.ts`):
+
+- A valid file lands the amounts in centavos, including `25.000,50` written the pt way
+- Categories match without accents or case, and the account defaults to the user's first one
+- A file with bad lines imports **nothing** and reports the line number and reason for each
+- `dry_run` returns the same report without writing
+- Files missing required columns are rejected before any row is read
+- The export carries only the caller's rows and honours the list filters
+- **Round trip**: an exported file imports back into another account with identical rows
+
+Domain (`src/domain/csv.test.ts`): delimiter detection, quoted fields with embedded separators and
+doubled quotes, BOM and CRLF handling, header normalisation, Angolan and ISO dates (including the
+rejection of 31/02), amount formatting with a decimal comma, and CSV escaping on the way out.
+
 Domain (`src/domain/money.test.ts`): centavos validation, AOA formatting, budget progress,
 period totals, category/type compatibility.
 
