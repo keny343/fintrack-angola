@@ -8,7 +8,13 @@ import apiRoutes from './routes/api.js';
 
 export function createApp() {
   const app = express();
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  // A value pasted into a hosting dashboard often carries a trailing newline or
+  // slash. The newline is an illegal header character, so cors() threw on every
+  // request and took the health check down with it; the slash never matches the
+  // browser's Origin. Both are cheap to absorb here.
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173')
+    .trim()
+    .replace(/\/+$/, '');
 
   // Behind Render's load balancer the client IP only exists in X-Forwarded-For,
   // and without this the rate limiters would throttle every user as one.
@@ -17,6 +23,13 @@ export function createApp() {
   }
 
   app.use(helmet());
+
+  // Ahead of CORS on purpose: the platform's health check has no origin to
+  // negotiate, and must not be able to fail because of a misconfigured one.
+  app.get('/health', (_req, res) => {
+    res.json({ status: 'ok' });
+  });
+
   app.use(
     cors({
       origin: frontendUrl,
@@ -25,10 +38,6 @@ export function createApp() {
   );
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
-
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok' });
-  });
 
   // The API has no pages; point humans who open it in a browser to the app.
   app.get('/', (_req, res) => {
