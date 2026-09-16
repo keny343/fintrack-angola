@@ -24,6 +24,16 @@ export function createApp() {
     res.json({ status: 'ok' });
   });
 
+  // The API has no pages; point humans who open it in a browser to the app.
+  app.get('/', (_req, res) => {
+    res.json({
+      service: 'FinTrack Angola API',
+      app: frontendUrl,
+      health: '/health',
+      docs: 'https://github.com/keny343 — docs/API.md',
+    });
+  });
+
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 30,
