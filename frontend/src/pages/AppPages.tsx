@@ -1,3 +1,22 @@
+import {
+  ArrowsClockwise,
+  ArrowsDownUp,
+  ChartBar,
+  Flag,
+  Minus,
+  Pause,
+  Play,
+  Plus,
+  Scales,
+  SignOut,
+  SquaresFour,
+  Target,
+  Trash,
+  TrendDown,
+  TrendUp,
+  WarningCircle,
+  type Icon,
+} from '@phosphor-icons/react';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import {
@@ -10,6 +29,7 @@ import {
   YAxis,
 } from 'recharts';
 import { useAuth } from '../auth/AuthContext';
+import { ThemeToggle } from '../components/ThemeToggle';
 import {
   api,
   type BudgetsResponse,
@@ -19,16 +39,30 @@ import {
   type RecurringRule,
   type Transaction,
 } from '../services/api';
+import { useTheme } from '../theme/ThemeContext';
 import { currentYearMonth, formatAOA, formatDateAO, parseAOAInput } from '../utils/money';
 
-const NAV_ITEMS = [
-  { to: '/app', label: 'Dashboard', end: true },
-  { to: '/app/transactions', label: 'Transações' },
-  { to: '/app/budgets', label: 'Orçamentos' },
-  { to: '/app/recurring', label: 'Recorrências' },
-  { to: '/app/goals', label: 'Objetivos' },
-  { to: '/app/reports', label: 'Relatórios' },
+const NAV_ITEMS: Array<{ to: string; label: string; icon: Icon; end?: boolean }> = [
+  { to: '/app', label: 'Dashboard', icon: SquaresFour, end: true },
+  { to: '/app/transactions', label: 'Transações', icon: ArrowsDownUp },
+  { to: '/app/budgets', label: 'Orçamentos', icon: Target },
+  { to: '/app/recurring', label: 'Recorrências', icon: ArrowsClockwise },
+  { to: '/app/goals', label: 'Objetivos', icon: Flag },
+  { to: '/app/reports', label: 'Relatórios', icon: ChartBar },
 ];
+
+function ErrorAlert({ message }: { message: string }) {
+  return (
+    <div aria-live="polite">
+      {message && (
+        <div className="alert">
+          <WarningCircle size={18} aria-hidden="true" />
+          <span>{message}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AppShell() {
   const { user, loading, logout } = useAuth();
@@ -46,31 +80,41 @@ function AppShell() {
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <Link className="brand" to="/app">
-          <span className="brand-mark">Kz</span>
-          FinTrack
-        </Link>
+        <div className="sidebar-top">
+          <Link className="brand" to="/app">
+            <span className="brand-mark" aria-hidden="true">
+              Kz
+            </span>
+            FinTrack
+          </Link>
+          <ThemeToggle />
+        </div>
         <nav className="side-nav">
           <p className="nav-label">Gestão</p>
-          {NAV_ITEMS.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end}>
-              {item.label}
+          {NAV_ITEMS.map(({ to, label, icon: NavIcon, end }) => (
+            <NavLink key={to} to={to} end={end}>
+              <NavIcon size={18} aria-hidden="true" />
+              {label}
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-user">
-          <span className="avatar">{initials}</span>
+          <span className="avatar" aria-hidden="true">
+            {initials}
+          </span>
           <span>{user.name}</span>
         </div>
         <button
           className="btn btn-ghost btn-sm"
           type="button"
+          aria-label="Terminar sessão"
           onClick={async () => {
             await logout();
             nav('/');
           }}
         >
-          Terminar sessão
+          <SignOut size={16} aria-hidden="true" />
+          <span className="btn-label">Terminar sessão</span>
         </button>
       </aside>
       <main className="app-main">
@@ -81,6 +125,7 @@ function AppShell() {
 }
 
 export function DashboardPage() {
+  const { theme } = useTheme();
   const [ym, setYm] = useState(currentYearMonth());
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState('');
@@ -103,6 +148,10 @@ export function DashboardPage() {
     [data]
   );
 
+  const axis = theme === 'dark' ? '#94a3b8' : '#6b6862';
+  const grid = theme === 'dark' ? '#334155' : '#e0ddd6';
+  const surface = theme === 'dark' ? '#222735' : '#ffffff';
+
   return (
     <section>
       <header className="page-head">
@@ -115,24 +164,36 @@ export function DashboardPage() {
           <input type="month" value={ym} onChange={(e) => setYm(e.target.value)} />
         </label>
       </header>
-      {error && <div className="alert">{error}</div>}
+      <ErrorAlert message={error} />
       {data && (
         <>
-          <div className="kpi-row">
-            <article className="kpi kpi-dark">
-              <span>Saldo</span>
+          <div className="kpi-row stagger">
+            <article className="kpi kpi-primary">
+              <span className="kpi-label">
+                <Scales size={14} aria-hidden="true" />
+                Saldo
+              </span>
               <strong>{formatAOA(data.balance_cents)}</strong>
             </article>
             <article className="kpi">
-              <span>Receitas</span>
+              <span className="kpi-label">
+                <TrendUp size={14} aria-hidden="true" />
+                Receitas
+              </span>
               <strong className="pos">{formatAOA(data.income_cents)}</strong>
             </article>
             <article className="kpi">
-              <span>Despesas</span>
+              <span className="kpi-label">
+                <TrendDown size={14} aria-hidden="true" />
+                Despesas
+              </span>
               <strong className="neg">{formatAOA(data.expense_cents)}</strong>
             </article>
             <article className="kpi">
-              <span>Líquido do mês</span>
+              <span className="kpi-label">
+                <ArrowsDownUp size={14} aria-hidden="true" />
+                Líquido do mês
+              </span>
               <strong>{formatAOA(data.net_cents)}</strong>
             </article>
           </div>
@@ -145,25 +206,32 @@ export function DashboardPage() {
                 ) : (
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#ece6da" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={grid} vertical={false} />
                       <XAxis
                         dataKey="name"
-                        tick={{ fontSize: 11, fill: '#6f6a87' }}
-                        axisLine={{ stroke: '#e5dfd3' }}
+                        tick={{ fontSize: 11, fill: axis }}
+                        axisLine={{ stroke: grid }}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fontSize: 11, fill: '#6f6a87' }}
+                        tick={{ fontSize: 11, fill: axis }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <Tooltip
+                        cursor={{ fill: grid, opacity: 0.25 }}
+                        contentStyle={{
+                          background: surface,
+                          border: `1px solid ${grid}`,
+                          borderRadius: 6,
+                          fontSize: 13,
+                        }}
                         formatter={(v) => formatAOA(Math.round(Number(v) * 100))}
                         labelFormatter={(_, payload) =>
                           (payload?.[0]?.payload as { full?: string })?.full || ''
                         }
                       />
-                      <Bar dataKey="value" fill="#e4a11b" radius={[5, 5, 0, 0]} maxBarSize={52} />
+                      <Bar dataKey="value" fill="#f59e0b" radius={[3, 3, 0, 0]} maxBarSize={44} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -178,7 +246,7 @@ export function DashboardPage() {
                       <strong>{t.category_name}</strong>
                       <span className="muted">{formatDateAO(t.occurred_on)}</span>
                     </div>
-                    <span className={t.type === 'income' ? 'pos' : 'neg'}>
+                    <span className={`amount ${t.type === 'income' ? 'pos' : 'neg'}`}>
                       {t.type === 'income' ? '+' : '−'}
                       {formatAOA(t.amount_cents)}
                     </span>
@@ -227,9 +295,7 @@ export function TransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterType]);
 
-  const filteredCats = categories.filter(
-    (c) => c.kind === type || c.kind === 'both'
-  );
+  const filteredCats = categories.filter((c) => c.kind === type || c.kind === 'both');
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
@@ -268,7 +334,7 @@ export function TransactionsPage() {
           </select>
         </label>
       </header>
-      {error && <div className="alert">{error}</div>}
+      <ErrorAlert message={error} />
       <form className="panel form-grid" onSubmit={onCreate}>
         <label>
           Tipo
@@ -295,7 +361,10 @@ export function TransactionsPage() {
         </label>
         <label>
           Categoria
-          <select value={categoryId || filteredCats[0]?.id || ''} onChange={(e) => setCategoryId(Number(e.target.value))}>
+          <select
+            value={categoryId || filteredCats[0]?.id || ''}
+            onChange={(e) => setCategoryId(Number(e.target.value))}
+          >
             {filteredCats.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -305,7 +374,12 @@ export function TransactionsPage() {
         </label>
         <label>
           Valor (Kz)
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="15000" required />
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="15000"
+            required
+          />
         </label>
         <label>
           Data
@@ -316,6 +390,7 @@ export function TransactionsPage() {
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
         <button className="btn btn-primary" type="submit">
+          <Plus size={16} aria-hidden="true" />
           Adicionar
         </button>
       </form>
@@ -327,19 +402,21 @@ export function TransactionsPage() {
               <th>Tipo</th>
               <th>Categoria</th>
               <th>Conta</th>
-              <th>Valor</th>
+              <th className="right">Valor</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             {items.map((t) => (
               <tr key={t.id}>
-                <td>{formatDateAO(t.occurred_on)}</td>
+                <td className="num">{formatDateAO(t.occurred_on)}</td>
                 <td>{t.type === 'income' ? 'Receita' : 'Despesa'}</td>
                 <td>{t.category_name}</td>
                 <td>{t.account_name}</td>
-                <td className={t.type === 'income' ? 'pos' : 'neg'}>{formatAOA(t.amount_cents)}</td>
-                <td>
+                <td className={`right ${t.type === 'income' ? 'pos' : 'neg'}`}>
+                  {formatAOA(t.amount_cents)}
+                </td>
+                <td className="right">
                   <button
                     className="btn btn-ghost btn-sm"
                     type="button"
@@ -348,11 +425,19 @@ export function TransactionsPage() {
                       await load();
                     }}
                   >
+                    <Trash size={14} aria-hidden="true" />
                     Apagar
                   </button>
                 </td>
               </tr>
             ))}
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={6} className="muted">
+                  Sem movimentos para este filtro.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -409,7 +494,7 @@ export function BudgetsPage() {
           <input type="month" value={ym} onChange={(e) => setYm(e.target.value)} />
         </label>
       </header>
-      {error && <div className="alert">{error}</div>}
+      <ErrorAlert message={error} />
       <form className="panel form-grid" onSubmit={onSave}>
         <label>
           Categoria
@@ -423,9 +508,15 @@ export function BudgetsPage() {
         </label>
         <label>
           Limite (Kz)
-          <input value={limit} onChange={(e) => setLimit(e.target.value)} placeholder="100000" required />
+          <input
+            value={limit}
+            onChange={(e) => setLimit(e.target.value)}
+            placeholder="100000"
+            required
+          />
         </label>
         <button className="btn btn-primary" type="submit">
+          <Plus size={16} aria-hidden="true" />
           Guardar
         </button>
       </form>
@@ -434,10 +525,20 @@ export function BudgetsPage() {
           <article key={b.id} className="panel budget-card">
             <header>
               <h2>{b.category_name}</h2>
-              <span>{b.percent_used}%</span>
+              <span className="num">{b.percent_used}%</span>
             </header>
-            <div className="bar">
-              <div className="bar-fill" style={{ width: `${Math.min(100, b.percent_used)}%` }} />
+            <div
+              className="bar"
+              role="progressbar"
+              aria-label={`Orçamento de ${b.category_name}`}
+              aria-valuenow={b.percent_used}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="bar-fill"
+                style={{ transform: `scaleX(${Math.min(100, b.percent_used) / 100})` }}
+              />
             </div>
             <p>
               Utilizado {formatAOA(b.spent_cents)} de {formatAOA(b.limit_cents)} · Restante{' '}
@@ -532,11 +633,19 @@ export function RecurringPage() {
           <p className="muted">Lançamentos mensais fixos: renda, salário, propinas</p>
         </div>
         <button className="btn btn-ghost btn-sm" type="button" onClick={onRun}>
+          <ArrowsClockwise size={16} aria-hidden="true" />
           Lançar em atraso
         </button>
       </header>
-      {error && <div className="alert">{error}</div>}
-      {status && <div className="notice">{status}</div>}
+      <ErrorAlert message={error} />
+      <div aria-live="polite">
+        {status && (
+          <div className="notice">
+            <ArrowsClockwise size={18} aria-hidden="true" />
+            <span>{status}</span>
+          </div>
+        )}
+      </div>
       <form className="panel form-grid" onSubmit={onCreate}>
         <label>
           Descrição
@@ -583,7 +692,12 @@ export function RecurringPage() {
         </label>
         <label>
           Valor (Kz)
-          <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="150000" required />
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="150000"
+            required
+          />
         </label>
         <label>
           Dia do mês
@@ -598,24 +712,30 @@ export function RecurringPage() {
         </label>
         <label>
           Início
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+          />
         </label>
         <label>
           Fim (opcional)
           <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </label>
         <button className="btn btn-primary" type="submit">
+          <Plus size={16} aria-hidden="true" />
           Criar recorrência
         </button>
       </form>
-      <div className="panel">
+      <div className="panel table-wrap">
         <table className="table">
           <thead>
             <tr>
               <th>Descrição</th>
               <th>Categoria</th>
               <th>Dia</th>
-              <th>Valor</th>
+              <th className="right">Valor</th>
               <th>Próximo</th>
               <th />
             </tr>
@@ -625,16 +745,24 @@ export function RecurringPage() {
               <tr key={r.id} className={r.active ? undefined : 'row-muted'}>
                 <td>
                   {r.name}
-                  {!r.active && <span className="tag"> Pausada</span>}
+                  {!r.active && (
+                    <>
+                      {' '}
+                      <span className="tag">
+                        <Pause size={11} aria-hidden="true" />
+                        Pausada
+                      </span>
+                    </>
+                  )}
                 </td>
                 <td>
                   {r.category_name} · {r.account_name}
                 </td>
-                <td>{r.day_of_month}</td>
-                <td className={r.type === 'income' ? 'pos' : 'neg'}>
+                <td className="num">{r.day_of_month}</td>
+                <td className={`right ${r.type === 'income' ? 'pos' : 'neg'}`}>
                   {r.type === 'income' ? '+' : '−'} {formatAOA(r.amount_cents)}
                 </td>
-                <td>{r.next_occurrence ? formatDateAO(r.next_occurrence) : '—'}</td>
+                <td className="num">{r.next_occurrence ? formatDateAO(r.next_occurrence) : '—'}</td>
                 <td className="right">
                   <button
                     className="btn btn-ghost btn-sm"
@@ -644,8 +772,13 @@ export function RecurringPage() {
                       await load();
                     }}
                   >
+                    {r.active ? (
+                      <Pause size={14} aria-hidden="true" />
+                    ) : (
+                      <Play size={14} aria-hidden="true" />
+                    )}
                     {r.active ? 'Pausar' : 'Retomar'}
-                  </button>
+                  </button>{' '}
                   <button
                     className="btn btn-ghost btn-sm"
                     type="button"
@@ -654,6 +787,7 @@ export function RecurringPage() {
                       await load();
                     }}
                   >
+                    <Trash size={14} aria-hidden="true" />
                     Apagar
                   </button>
                 </td>
@@ -737,7 +871,7 @@ export function GoalsPage() {
           <p className="muted">Metas de poupança e ritmo necessário</p>
         </div>
       </header>
-      {error && <div className="alert">{error}</div>}
+      <ErrorAlert message={error} />
       <form className="panel form-grid" onSubmit={onCreate}>
         <label>
           Objetivo
@@ -763,6 +897,7 @@ export function GoalsPage() {
           <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
         </label>
         <button className="btn btn-primary" type="submit">
+          <Plus size={16} aria-hidden="true" />
           Criar objetivo
         </button>
       </form>
@@ -773,8 +908,18 @@ export function GoalsPage() {
               <h2>{g.name}</h2>
               <span className={`tag tag-${g.status}`}>{GOAL_STATUS_LABEL[g.status]}</span>
             </header>
-            <div className="bar">
-              <div className="bar-fill" style={{ width: `${Math.min(100, g.percent)}%` }} />
+            <div
+              className="bar"
+              role="progressbar"
+              aria-label={`Progresso de ${g.name}`}
+              aria-valuenow={g.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="bar-fill"
+                style={{ transform: `scaleX(${Math.min(100, g.percent) / 100})` }}
+              />
             </div>
             <p>
               {formatAOA(g.saved_cents)} de {formatAOA(g.target_cents)} · {g.percent}% · Falta{' '}
@@ -790,13 +935,16 @@ export function GoalsPage() {
             <div className="goal-actions">
               <input
                 value={contribution[g.id] ?? ''}
-                onChange={(e) =>
-                  setContribution((prev) => ({ ...prev, [g.id]: e.target.value }))
-                }
+                onChange={(e) => setContribution((prev) => ({ ...prev, [g.id]: e.target.value }))}
                 placeholder="Valor a depositar"
                 aria-label={`Contribuição para ${g.name}`}
               />
-              <button className="btn btn-primary btn-sm" type="button" onClick={() => onContribute(g.id)}>
+              <button
+                className="btn btn-primary btn-sm"
+                type="button"
+                onClick={() => onContribute(g.id)}
+              >
+                <Plus size={14} aria-hidden="true" />
                 Contribuir
               </button>
               <button
@@ -807,6 +955,7 @@ export function GoalsPage() {
                   await load();
                 }}
               >
+                <Trash size={14} aria-hidden="true" />
                 Apagar
               </button>
             </div>
@@ -861,27 +1010,45 @@ export function ReportsPage() {
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </label>
         <button className="btn btn-primary" type="submit">
+          <ChartBar size={16} aria-hidden="true" />
           Gerar
         </button>
       </form>
-      {error && <div className="alert">{error}</div>}
+      <ErrorAlert message={error} />
       <div className="panel table-wrap">
         <table>
           <thead>
             <tr>
               <th>Categoria</th>
               <th>Tipo</th>
-              <th>Total</th>
+              <th className="right">Total</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={`${r.name}-${r.type}-${i}`}>
                 <td>{r.name}</td>
-                <td>{r.type === 'income' ? 'Receita' : 'Despesa'}</td>
-                <td>{formatAOA(r.total_cents)}</td>
+                <td>
+                  {r.type === 'income' ? (
+                    <span className="pos">
+                      <TrendUp size={13} aria-hidden="true" /> Receita
+                    </span>
+                  ) : (
+                    <span className="neg">
+                      <Minus size={13} aria-hidden="true" /> Despesa
+                    </span>
+                  )}
+                </td>
+                <td className="right">{formatAOA(r.total_cents)}</td>
               </tr>
             ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={3} className="muted">
+                  Sem dados no período escolhido.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

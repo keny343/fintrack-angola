@@ -80,6 +80,13 @@ auth, validation, budget math, and **per-user data isolation**. Details:
 Helmet, CORS allowlist, rate limits on auth/API, bcrypt passwords, parameterized SQL, httpOnly cookies.  
 See [`docs/SECURITY.md`](./docs/SECURITY.md).
 
+## Interface
+
+Swiss-style minimal UI, gold on navy, with a light theme in warm neutrals.
+Semantic colour tokens, IBM Plex Sans/Mono with tabular figures for money,
+Phosphor icons, and motion gated by frequency and `prefers-reduced-motion`.
+See [`docs/DESIGN.md`](./docs/DESIGN.md).
+
 ## Roadmap
 
 - [x] Savings goals

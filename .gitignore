@@ -1,6 +1,10 @@
 node_modules/
 dist/
 build/
+
+# Local agent skill caches, not part of the product
+.agents/
+skills-lock.json
 coverage/
 .env
 .env.local
