@@ -34,6 +34,16 @@ describe('createApp', () => {
     expect(res.headers['access-control-allow-origin']).toBe(ORIGIN);
   });
 
+  it('answers a malformed JSON body in JSON, not HTML', async () => {
+    const res = await request(createApp())
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{"email": "quebrado"')
+      .expect(400);
+    expect(res.headers['content-type']).toMatch(/application\/json/);
+    expect(res.body.error).toMatch(/JSON/);
+  });
+
   it('never reflects a foreign origin back to the caller', async () => {
     // The allowlist is a single fixed origin, so the header always names the
     // frontend and the browser is the one that refuses the mismatch.

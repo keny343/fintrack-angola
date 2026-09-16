@@ -6,8 +6,11 @@
 
 React · TypeScript · Vite · Express · PostgreSQL · Docker · Vitest · GitHub Actions
 
-> Status: **local MVP** — auth, transactions, budgets, dashboard, reports, savings goals,
-> recurring bills, CSV import/export and deterministic monthly insights. Not deployed live yet.
+**Live:** [fintrack-angola.vercel.app](https://fintrack-angola.vercel.app) ·
+API health: [`/health`](https://fintrack-angola-api.onrender.com/health)
+
+> Running on free plans: the API sleeps after 15 minutes idle, so the first request after a pause
+> takes about a minute. Reload once and it answers.
 
 ## Problem
 
@@ -98,7 +101,7 @@ See [`docs/DESIGN.md`](./docs/DESIGN.md).
 - [x] Recurring transactions
 - [x] CSV import/export
 - [x] Deterministic monthly insights
-- [ ] Live deploy (Vercel + Render)
+- [x] Live deploy — Vercel (frontend) + Render (API and PostgreSQL)
 - [ ] Optional LLM narration on top of the insight facts
 
 ## Author

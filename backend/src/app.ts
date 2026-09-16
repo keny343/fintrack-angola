@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -70,6 +70,15 @@ export function createApp() {
 
   app.use((_req, res) => {
     res.status(404).json({ error: 'Não encontrado.' });
+  });
+
+  // Express answers a malformed JSON body with an HTML error page, which is a
+  // surprise for a client that only ever expects JSON from this API.
+  app.use((err: Error & { status?: number }, _req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof SyntaxError && err.status === 400) {
+      return res.status(400).json({ error: 'O corpo do pedido não é JSON válido.' });
+    }
+    return next(err);
   });
 
   return app;
