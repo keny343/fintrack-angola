@@ -11,9 +11,10 @@ Base URL: `http://localhost:4000`
 - `POST /api/auth/register` `{ name, email, password }`
 - `POST /api/auth/login` `{ email, password }`
 - `POST /api/auth/logout`
-- `GET /api/auth/me`
+- `GET /api/auth/me` — session probe, always `200`: `{ "user": {...} }` or `{ "user": null }`
 
-Sets httpOnly cookie `token`.
+Sets httpOnly cookie `token`. Everything under `/api` other than the probe answers `401`
+without a valid session.
 
 ## Finance (auth required)
 

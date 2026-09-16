@@ -42,31 +42,44 @@ export function cookieOptions() {
   };
 }
 
-export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+export type SessionResult = { user: AuthUser } | { user: null; reason: 'missing' | 'invalid' };
+
+/**
+ * Reads the session without deciding what its absence means. Protected routes
+ * turn a missing session into a 401; the session probe reports it as a fact.
+ */
+export async function resolveSession(req: Request): Promise<SessionResult> {
+  const header = req.headers.authorization;
+  const bearer = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  const token = (req.cookies?.token as string | undefined) || bearer;
+  if (!token) {
+    return { user: null, reason: 'missing' };
+  }
   try {
-    const header = req.headers.authorization;
-    const bearer = header?.startsWith('Bearer ') ? header.slice(7) : null;
-    const token = (req.cookies?.token as string | undefined) || bearer;
-    if (!token) {
-      return res.status(401).json({ error: 'Sessão não iniciada.' });
-    }
     const decoded = jwt.verify(token, jwtSecret()) as jwt.JwtPayload;
     const userId = Number(decoded.sub);
     if (!Number.isFinite(userId)) {
-      return res.status(401).json({ error: 'Sessão inválida.' });
+      return { user: null, reason: 'invalid' };
     }
-    const result = await query<{ id: number; email: string; name: string }>(
-      'SELECT id, email, name FROM users WHERE id = $1',
-      [userId]
-    );
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Sessão inválida.' });
-    }
-    req.user = result.rows[0];
-    next();
+    const result = await query<AuthUser>('SELECT id, email, name FROM users WHERE id = $1', [
+      userId,
+    ]);
+    const user = result.rows[0];
+    return user ? { user } : { user: null, reason: 'invalid' };
   } catch {
-    return res.status(401).json({ error: 'Sessão inválida ou expirada.' });
+    return { user: null, reason: 'invalid' };
   }
+}
+
+export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const session = await resolveSession(req);
+  if (!session.user) {
+    const error =
+      session.reason === 'missing' ? 'Sessão não iniciada.' : 'Sessão inválida ou expirada.';
+    return res.status(401).json({ error });
+  }
+  req.user = session.user;
+  next();
 }
 
 export async function audit(userId: number | null, action: string, meta?: unknown) {

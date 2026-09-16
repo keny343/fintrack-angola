@@ -32,7 +32,8 @@ Auth (`src/routes/auth.test.ts`):
 
 - Register creates the user, sets an httpOnly cookie, and provisions the default accounts
 - Duplicate email, weak password, and wrong credentials are rejected
-- `/api/auth/me` and finance routes return 401 without a session; logout clears it
+- Finance routes return 401 without a session, including after logout
+- `/api/auth/me` answers 200 with a null user when the session is absent or tampered with
 
 Finance (`src/routes/api.test.ts`):
 

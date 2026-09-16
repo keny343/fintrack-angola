@@ -27,7 +27,9 @@ export const api = {
   login: (body: { email: string; password: string }) =>
     request<{ user: User }>('/api/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   logout: () => request<{ ok: boolean }>('/api/auth/logout', { method: 'POST' }),
-  me: () => request<{ user: User }>('/api/auth/me'),
+  // Answers 200 with a null user when there is no session, so a plain visit to
+  // a public page does not log a failed request.
+  me: () => request<{ user: User | null }>('/api/auth/me'),
   accounts: () => request<{ accounts: Array<{ id: number; name: string; kind: string }> }>('/api/accounts'),
   categories: () =>
     request<{ categories: Array<{ id: number; name: string; kind: string }> }>('/api/categories'),

@@ -61,10 +61,22 @@ describe('auth routes', () => {
     expect(res.status).toBe(401);
   });
 
-  it('protects /api/auth/me and finance routes without session', async () => {
-    expect((await request(app).get('/api/auth/me')).status).toBe(401);
+  it('protects finance routes without session', async () => {
     expect((await request(app).get('/api/transactions')).status).toBe(401);
     expect((await request(app).get('/api/dashboard')).status).toBe(401);
+  });
+
+  it('reports an absent session on /api/auth/me instead of failing', async () => {
+    const res = await request(app).get('/api/auth/me').expect(200);
+    expect(res.body).toEqual({ user: null });
+  });
+
+  it('reports a tampered session as absent', async () => {
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Cookie', 'token=nao-e-um-jwt')
+      .expect(200);
+    expect(res.body).toEqual({ user: null });
   });
 
   it('returns the session user and clears it on logout', async () => {
@@ -76,7 +88,10 @@ describe('auth routes', () => {
     expect(me.body.user.email).toBe('ana@example.ao');
 
     await agent.post('/api/auth/logout');
-    expect((await agent.get('/api/auth/me')).status).toBe(401);
+    const afterLogout = await agent.get('/api/auth/me').expect(200);
+    expect(afterLogout.body.user).toBeNull();
+    // The probe going quiet must not mean the door is open.
+    expect((await agent.get('/api/transactions')).status).toBe(401);
   });
 
   it('serves health without auth', async () => {

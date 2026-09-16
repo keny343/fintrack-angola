@@ -2,7 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
-import { audit, cookieOptions, requireAuth, signToken } from '../middleware/auth.js';
+import { audit, cookieOptions, resolveSession, signToken } from '../middleware/auth.js';
 import { runRecurring } from '../services/recurring.js';
 
 const router = Router();
@@ -77,8 +77,13 @@ router.post('/logout', (_req, res) => {
   return res.json({ ok: true });
 });
 
-router.get('/me', requireAuth, (req, res) => {
-  return res.json({ user: req.user });
+// A session probe, not a protected resource: "nobody is logged in" is a valid
+// answer, so it reports the fact instead of failing the request. The frontend
+// calls this on every page load, and a 401 there is noise the browser logs as
+// an error even though the app handles it.
+router.get('/me', async (req, res) => {
+  const session = await resolveSession(req);
+  return res.json({ user: session.user });
 });
 
 export default router;
