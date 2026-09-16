@@ -88,6 +88,16 @@ auth, validation, budget math, and **per-user data isolation**. Details:
 Helmet, CORS allowlist, rate limits on auth/API, bcrypt passwords, parameterized SQL, httpOnly cookies.  
 See [`docs/SECURITY.md`](./docs/SECURITY.md).
 
+## The monthly summary
+
+A language model may write the paragraph on the dashboard, but it never computes it. The figures come
+from SQL and pure functions; the model is handed the finished numbers and allowed only to choose the
+words. Every number in its answer is checked against the list of figures that were actually computed,
+and an answer containing anything else is thrown away in favour of a summary the API composes itself.
+
+With no API key the feature stays dormant and the app works exactly as before.
+See [`docs/AI.md`](./docs/AI.md).
+
 ## Interface
 
 Swiss-style minimal UI, gold on navy, with a light theme in warm neutrals.
@@ -102,7 +112,7 @@ See [`docs/DESIGN.md`](./docs/DESIGN.md).
 - [x] CSV import/export
 - [x] Deterministic monthly insights
 - [x] Live deploy — Vercel (frontend) + Render (API and PostgreSQL)
-- [ ] Optional LLM narration on top of the insight facts
+- [x] Optional LLM narration on top of the insight facts, with the figures verified
 
 ## Author
 

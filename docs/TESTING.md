@@ -68,6 +68,18 @@ Insights (`src/routes/insights.test.ts`):
 - Only fixed bills still ahead of today count towards what is due
 - **User isolation**: another account's numbers never reach the insights
 
+Narration (`src/routes/narration.test.ts`) — the model is a stubbed `fetch`, so the provider's own
+HTTP handling is under test too, and no test reaches the network:
+
+- With no key configured the month is still described, from the deterministic summary
+- A faithful answer is served as `source: 'model'`, with the model named
+- The key travels as a bearer token and `max_tokens` stays capped
+- An answer containing a figure nobody computed is **discarded** and reported in `rejected_figures`
+- A provider that throws, times out, or answers `429` falls back instead of failing the request
+- An empty month never reaches the provider, and a repeated month is served from cache
+- Changing the month's numbers invalidates that cache
+- **User isolation**: each caller's paragraph describes their own month
+
 CSV import and export (`src/routes/csv.test.ts`):
 
 - A valid file lands the amounts in centavos, including `25.000,50` written the pt way
@@ -87,6 +99,12 @@ spending without income, budget overruns and near-limit warnings, category jumps
 ones ignored for being large in percentage but small in Kwanzas), fixed bills that do or do not fit
 in what is left, goals behind pace, category concentration, severity ordering, the six-insight cap,
 and percentages written with a comma.
+
+Domain (`src/domain/narration.test.ts`): number extraction from Portuguese text (a year stays whole,
+thousands split by space or dot, two numbers across a full stop stay apart), the list of figures an
+answer may repeat — centavos excluded — and the check itself accepting a faithful answer while
+rejecting invented, rounded and self-computed figures. Also asserts the prompt carries no note,
+account name or e-mail, and that the deterministic summary would pass its own check.
 
 Domain (`src/domain/money.test.ts`): centavos validation, AOA formatting, budget progress,
 period totals, category/type compatibility.

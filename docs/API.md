@@ -45,8 +45,16 @@ month, recurring expenses still due before month end against what is left, goals
 
 Every figure is computed in SQL and in
 [`backend/src/domain/insights.ts`](../backend/src/domain/insights.ts), which is a pure function over
-those numbers — no estimates, no rounding before a comparison. If a language model is plugged in
-later to phrase these differently, `facts` is the only thing it is allowed to talk about.
+those numbers — no estimates, no rounding before a comparison.
+
+- `GET /api/insights/narration?year_month=YYYY-MM` → `{ year_month, text, source, provider }`
+
+The same month written as a paragraph. `source` is `model` when a language model wrote it and
+`deterministic` when the API did, which is what happens with no key configured, on a timeout, on a
+provider error, and when the answer failed the check — in that last case `rejected_figures` lists
+the figures nobody computed. Always `200`: the caller never has to handle a missing model.
+
+A model chooses the words and never the numbers. See [AI.md](AI.md).
 
 ## CSV import and export (auth required)
 

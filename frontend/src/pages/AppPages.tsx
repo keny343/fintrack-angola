@@ -45,6 +45,7 @@ import {
   type ImportReport,
   type Insight,
   type InsightSeverity,
+  type Narration,
   type RecurringRule,
   type Transaction,
 } from '../services/api';
@@ -318,6 +319,7 @@ export function DashboardPage() {
   const [ym, setYm] = useState(currentYearMonth());
   const [data, setData] = useState<Dashboard | null>(null);
   const [insights, setInsights] = useState<Insight[] | null>(null);
+  const [narration, setNarration] = useState<Narration | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -331,6 +333,11 @@ export function DashboardPage() {
       .insights(ym)
       .then((res) => setInsights(res.insights))
       .catch(() => setInsights([]));
+    setNarration(null);
+    api
+      .narration(ym)
+      .then(setNarration)
+      .catch(() => setNarration(null));
   }, [ym]);
 
   const chartData = useMemo(
@@ -395,6 +402,18 @@ export function DashboardPage() {
           {insights && insights.length > 0 && (
             <div className="panel">
               <h2>O que os teus números dizem</h2>
+              {/*
+                Only the model's version earns space here. The deterministic
+                summary is assembled from the very sentences listed below it, so
+                on this page it would just say everything twice; it stays in the
+                API, where a caller has no cards to read.
+              */}
+              {narration?.source === 'model' && (
+                <p className="narration">
+                  {narration.text}
+                  <small>Resumo escrito por um modelo a partir dos números acima.</small>
+                </p>
+              )}
               <InsightList insights={insights} />
             </div>
           )}

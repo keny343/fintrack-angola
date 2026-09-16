@@ -6,6 +6,7 @@ import { assertPositiveCents, categoryMatchesType } from '../domain/money.js';
 import { formatCentsForCsv, toCsv } from '../domain/csv.js';
 import { commitImport, MAX_IMPORT_ROWS, prepareImport } from '../services/csvImport.js';
 import { monthInsights } from '../services/insights.js';
+import { narrateMonth } from '../services/narration.js';
 import { goalProgress, monthlyPaceCents } from '../domain/goals.js';
 import { nextOccurrence } from '../domain/recurring.js';
 import { runRecurring } from '../services/recurring.js';
@@ -348,14 +349,24 @@ router.get('/dashboard', async (req, res) => {
   });
 });
 
-router.get('/insights', async (req, res) => {
-  const yearMonth =
-    typeof req.query.year_month === 'string' && /^\d{4}-\d{2}$/.test(req.query.year_month)
-      ? req.query.year_month
-      : new Date().toISOString().slice(0, 7);
+function monthParam(req: Request): string {
+  return typeof req.query.year_month === 'string' && /^\d{4}-\d{2}$/.test(req.query.year_month)
+    ? req.query.year_month
+    : new Date().toISOString().slice(0, 7);
+}
 
+router.get('/insights', async (req, res) => {
+  const yearMonth = monthParam(req);
   const { metrics, insights } = await monthInsights(req.user!.id, yearMonth);
   res.json({ year_month: yearMonth, metrics, insights });
+});
+
+// The prose version of the same numbers. Answers with or without a model
+// configured, so the dashboard never has to ask whether one exists.
+router.get('/insights/narration', async (req, res) => {
+  const yearMonth = monthParam(req);
+  const narration = await narrateMonth(req.user!.id, yearMonth);
+  res.json(narration);
 });
 
 const recurringSchema = z.object({

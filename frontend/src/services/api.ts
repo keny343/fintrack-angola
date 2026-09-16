@@ -73,6 +73,8 @@ export const api = {
     request<Dashboard>(`/api/dashboard?year_month=${encodeURIComponent(yearMonth)}`),
   insights: (yearMonth: string) =>
     request<InsightsResponse>(`/api/insights?year_month=${encodeURIComponent(yearMonth)}`),
+  narration: (yearMonth: string) =>
+    request<Narration>(`/api/insights/narration?year_month=${encodeURIComponent(yearMonth)}`),
   budgets: (yearMonth: string) =>
     request<BudgetsResponse>(`/api/budgets?year_month=${encodeURIComponent(yearMonth)}`),
   upsertBudget: (body: unknown) =>
@@ -142,6 +144,14 @@ export type InsightsResponse = {
     top_category: { name: string; amount_cents: number; share_percent: number } | null;
   };
   insights: Insight[];
+};
+
+export type Narration = {
+  year_month: string;
+  text: string;
+  /** 'model' when a language model wrote it, 'deterministic' when the API did. */
+  source: 'model' | 'deterministic';
+  provider: string | null;
 };
 
 export type ImportIssue = { line: number; message: string };
