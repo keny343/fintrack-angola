@@ -1,10 +1,13 @@
 # FinTrack Angola
 
+[![CI](https://github.com/keny343/fintrack-angola/actions/workflows/ci.yml/badge.svg)](https://github.com/keny343/fintrack-angola/actions/workflows/ci.yml)
+
 **Personal finance in Kwanza (AOA/Kz)** — portfolio Full Stack app.
 
 React · TypeScript · Vite · Express · PostgreSQL · Docker · Vitest · GitHub Actions
 
-> Status: **local MVP** (auth, accounts, categories, transactions, budgets, dashboard, reports). Not a live production deploy yet.
+> Status: **local MVP** — auth, transactions, budgets, dashboard, reports, savings goals,
+> recurring bills, CSV import/export and deterministic monthly insights. Not deployed live yet.
 
 ## Problem
 
