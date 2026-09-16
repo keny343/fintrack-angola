@@ -3,12 +3,11 @@ import {
   ArrowsDownUp,
   ChartBar,
   Check,
+  Coins,
   Flag,
-  GithubLogo,
   LockKey,
-  ShieldCheck,
+  MapPin,
   Target,
-  TestTube,
   type Icon,
 } from '@phosphor-icons/react';
 import { useState, type FormEvent, type ReactNode } from 'react';
@@ -98,55 +97,55 @@ const FEATURES: Array<{ icon: Icon; title: string; body: string }> = [
   {
     icon: ArrowsDownUp,
     title: 'Receitas e despesas',
-    body: 'Lança movimentos por conta e categoria, filtra por período ou tipo e corrige o que estiver errado.',
+    body: 'Lança em segundos o que entra e o que sai, com as categorias do teu dia a dia.',
   },
   {
     icon: Target,
     title: 'Orçamentos mensais',
-    body: 'Define um limite por categoria e acompanha quanto já gastaste, quanto sobra e a percentagem usada.',
+    body: 'Define quanto queres gastar em cada categoria e vê quanto já foi e quanto ainda sobra.',
   },
   {
     icon: ArrowsClockwise,
-    title: 'Recorrências',
-    body: 'Renda, salário e propinas lançados automaticamente todos os meses — o dia 31 cai a 28 em Fevereiro, sem falhar meses.',
+    title: 'Despesas que repetem',
+    body: 'Renda, salário e propinas entram sozinhos todos os meses. Não tens de te lembrar.',
   },
   {
     icon: Flag,
     title: 'Objetivos de poupança',
-    body: 'Diz quanto queres juntar e até quando. O sistema calcula quanto falta por mês e compara com o teu ritmo real.',
+    body: 'Diz quanto queres juntar e até quando. Mostramos-te quanto precisas de pôr de lado por mês.',
   },
   {
     icon: ChartBar,
-    title: 'Relatórios',
-    body: 'Totais por categoria em qualquer intervalo de datas, para perceberes para onde foi o dinheiro.',
+    title: 'Para onde foi o dinheiro',
+    body: 'Escolhe um período e vê o total de cada categoria, do mês passado ou do ano inteiro.',
   },
   {
-    icon: ShieldCheck,
-    title: 'Dados isolados',
-    body: 'Cada conta só acede aos seus próprios dados, e isso é verificado por testes automáticos a cada alteração.',
+    icon: Coins,
+    title: 'Sempre em Kwanzas',
+    body: 'Valores exactos ao centavo e datas em dd/mm/aaaa, como escreves no dia a dia.',
   },
 ];
 
-const PROOF: Array<{ icon: Icon; title: string; body: string }> = [
+const BENEFITS: Array<{ icon: Icon; title: string; body: string }> = [
   {
-    icon: TestTube,
-    title: '50 testes automáticos',
-    body: 'Domínio e API, incluindo isolamento entre contas.',
+    icon: Coins,
+    title: 'Contas certas ao centavo',
+    body: 'Sem arredondamentos que não percebes.',
+  },
+  {
+    icon: MapPin,
+    title: 'Pensado para Angola',
+    body: 'Propinas, energia, água, transporte e renda.',
   },
   {
     icon: LockKey,
-    title: 'Sessão em cookie httpOnly',
-    body: 'bcrypt, SQL parametrizado e limite de tentativas.',
-  },
-  {
-    icon: ArrowsClockwise,
-    title: 'CI em cada commit',
-    body: 'Lint, typecheck, testes e build no GitHub Actions.',
-  },
-  {
-    icon: GithubLogo,
-    title: 'Código aberto',
+    title: 'Só tu vês as tuas contas',
     body: 'Sem publicidade e sem venda de dados.',
+  },
+  {
+    icon: Check,
+    title: 'Pronto em minutos',
+    body: 'Cria a conta e lança o salário do mês.',
   },
 ];
 
@@ -163,11 +162,11 @@ export function LandingPage() {
             <a className="nav-hide" href="#funcionalidades">
               Funcionalidades
             </a>
-            <a className="nav-hide" href="#kwanza">
-              Kwanza
+            <a className="nav-hide" href="#como-funciona">
+              Como funciona
             </a>
-            <a className="nav-hide" href="#seguranca">
-              Segurança
+            <a className="nav-hide" href="#privacidade">
+              Privacidade
             </a>
             <ThemeToggle />
             <Link to="/login">Entrar</Link>
@@ -198,27 +197,30 @@ export function LandingPage() {
             </div>
             <p className="hero-note">
               <Check size={16} aria-hidden="true" />
-              Projeto de engenharia aberto — sem publicidade, sem venda de dados.
+              Gratuito, sem publicidade e sem venda de dados.
             </p>
           </div>
           <aside className="hero-facts stagger">
             <div>
-              <b>Kz</b>
-              <p>
-                Montantes inteiros em centavos e formatação pt-AO, do formulário à base de dados.
-              </p>
+              <b>
+                <Coins size={18} aria-hidden="true" />
+                Tudo em Kwanzas
+              </b>
+              <p>Escreves 150.000,50 como sempre escreveste e as contas batem certo.</p>
             </div>
             <div>
-              <b>6 áreas</b>
-              <p>
-                Transações, orçamentos, recorrências, objetivos, relatórios e dashboard, completas.
-              </p>
+              <b>
+                <ArrowsClockwise size={18} aria-hidden="true" />
+                Contas fixas automáticas
+              </b>
+              <p>A renda e o salário entram todos os meses sem tu fazeres nada.</p>
             </div>
             <div>
-              <b>50 testes</b>
-              <p>
-                Suite automática que corre a cada alteração, incluindo isolamento entre contas.
-              </p>
+              <b>
+                <Flag size={18} aria-hidden="true" />
+                Objetivos com prazo
+              </b>
+              <p>Sabes quanto poupar por mês para chegares onde queres.</p>
             </div>
           </aside>
         </div>
@@ -232,9 +234,9 @@ export function LandingPage() {
 
       <section className="proof">
         <div className="lp-inner proof-grid">
-          {PROOF.map(({ icon: ProofIcon, title, body }) => (
+          {BENEFITS.map(({ icon: BenefitIcon, title, body }) => (
             <div className="proof-item" key={title}>
-              <ProofIcon size={20} aria-hidden="true" />
+              <BenefitIcon size={20} aria-hidden="true" />
               <span>
                 <b>{title}</b>
                 {body}
@@ -247,11 +249,10 @@ export function LandingPage() {
       <section className="lp-section" id="funcionalidades">
         <div className="lp-inner">
           <div className="section-head">
-            <p className="eyebrow">O que já funciona</p>
-            <h2>Seis coisas bem feitas, em vez de vinte a meio.</h2>
+            <p className="eyebrow">O que podes fazer</p>
+            <h2>Tudo o que precisas para controlar o mês.</h2>
             <p>
-              Cada área abaixo está implementada de ponta a ponta — interface, API e base de dados —
-              e coberta por testes automáticos.
+              Do salário que entra ao objetivo que queres alcançar, num só lugar e em Kwanzas.
             </p>
           </div>
           <Reveal>
@@ -270,41 +271,37 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="lp-section alt" id="kwanza">
+      <section className="lp-section alt" id="como-funciona">
         <div className="lp-inner">
           <div className="section-head">
-            <p className="eyebrow">Porque o Kwanza precisa de cuidado</p>
-            <h2>Valores guardados ao centavo, não em vírgula flutuante.</h2>
+            <p className="eyebrow">Como funciona</p>
+            <h2>Três passos e já vês o teu mês.</h2>
             <p>
-              Muitas aplicações guardam dinheiro como número decimal e acumulam erros de
-              arredondamento. Aqui os montantes são inteiros em centavos, do formulário até à base
-              de dados.
+              Não precisas de saber nada de contabilidade nem de importar ficheiros para começar.
             </p>
           </div>
           <Reveal>
             <div className="step-grid">
               <div className="step">
                 <b>01</b>
-                <h3>Escreves em Kwanzas</h3>
+                <h3>Cria a tua conta</h3>
                 <p>
-                  Introduzes <strong>150.000,50</strong> como estás habituado, com vírgula decimal e
-                  separador de milhares.
+                  Nome, email e palavra-passe. As categorias do dia a dia já vêm prontas a usar.
                 </p>
               </div>
               <div className="step">
                 <b>02</b>
-                <h3>Guardamos em centavos</h3>
+                <h3>Lança o salário e as contas fixas</h3>
                 <p>
-                  O valor viaja e é gravado como <strong>15 000 050</strong> centavos — um inteiro,
-                  sem arredondamentos silenciosos.
+                  A renda, as propinas e a luz que pagas todos os meses passam a entrar sozinhas.
                 </p>
               </div>
               <div className="step">
                 <b>03</b>
-                <h3>Lês em pt-AO</h3>
+                <h3>Acompanha e decide</h3>
                 <p>
-                  Volta formatado como <strong>150 000,50 Kz</strong>, com datas em dd/mm/aaaa e
-                  números alinhados nas tabelas.
+                  Vês o saldo, quanto já gastaste em cada categoria e quanto falta para o teu
+                  objetivo.
                 </p>
               </div>
             </div>
@@ -312,90 +309,43 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="lp-section" id="seguranca">
+      <section className="lp-section" id="privacidade">
         <div className="lp-inner">
           <div className="detail-split">
             <div>
-              <p className="eyebrow">Segurança e confiança</p>
-              <h2>As tuas finanças são privadas por construção.</h2>
+              <p className="eyebrow">Privacidade</p>
+              <h2>As tuas contas são só tuas.</h2>
               <ul className="check-list">
                 <li>
                   <Check size={16} aria-hidden="true" />
-                  Sessão em cookie httpOnly assinado, nunca acessível por JavaScript.
+                  Ninguém além de ti vê o que ganhas ou onde gastas.
                 </li>
                 <li>
                   <Check size={16} aria-hidden="true" />
-                  Palavras-passe guardadas com bcrypt, jamais em texto simples.
+                  Não vendemos nem partilhamos os teus dados com terceiros.
                 </li>
                 <li>
                   <Check size={16} aria-hidden="true" />
-                  Consultas SQL parametrizadas, sempre filtradas pelo utilizador da sessão.
+                  Não há publicidade dentro da aplicação.
                 </li>
                 <li>
                   <Check size={16} aria-hidden="true" />
-                  Limite de tentativas no login e cabeçalhos de segurança HTTP.
-                </li>
-                <li>
-                  <Check size={16} aria-hidden="true" />
-                  Registo de auditoria das ações importantes da conta.
-                </li>
-                <li>
-                  <Check size={16} aria-hidden="true" />
-                  Testes que tentam aceder aos dados de outra conta e têm de falhar.
+                  Apagas qualquer movimento, orçamento ou objetivo quando quiseres.
                 </li>
               </ul>
             </div>
             <Reveal>
-              <div className="code-card">
-                <div>
-                  <span className="c-com">// todas as consultas filtram pela sessão</span>
-                </div>
-                <div>
-                  <span className="c-key">SELECT</span> id, amount_cents, occurred_on
-                </div>
-                <div>
-                  <span className="c-key">FROM</span> transactions
-                </div>
-                <div>
-                  <span className="c-key">WHERE</span> user_id = <span className="c-str">$1</span>
-                </div>
-                <div>&nbsp;</div>
-                <div>
-                  <span className="c-com">// e um teste garante o isolamento</span>
-                </div>
-                <div>
-                  expect(intruder.get(<span className="c-str">'/api/transactions'</span>))
-                </div>
-                <div>
-                  &nbsp;&nbsp;.toHaveLength(<span className="c-str">0</span>)
-                </div>
+              <div className="assurance">
+                <span className="feature-icon">
+                  <LockKey size={20} aria-hidden="true" />
+                </span>
+                <h3>Entras só com a tua palavra-passe</h3>
+                <p>
+                  A tua conta é protegida por palavra-passe e a sessão termina quando saíres. Nunca
+                  pedimos dados do teu banco nem acesso à tua conta bancária.
+                </p>
               </div>
             </Reveal>
-          </div>
-        </div>
-      </section>
-
-      <section className="lp-section alt">
-        <div className="lp-inner">
-          <p className="eyebrow" style={{ marginBottom: 'var(--space-3)' }}>
-            Construído com
-          </p>
-          <div className="stack-strip">
-            {[
-              'React',
-              'TypeScript',
-              'Vite',
-              'Express',
-              'PostgreSQL',
-              'Zod',
-              'Vitest',
-              'Docker',
-              'GitHub Actions',
-            ].map((t) => (
-              <span className="chip" key={t}>
-                {t}
-              </span>
-            ))}
           </div>
         </div>
       </section>
@@ -405,8 +355,8 @@ export function LandingPage() {
           <div className="lp-cta">
             <h2>Começa pelo mês em curso.</h2>
             <p>
-              Cria a conta, lança o salário e duas despesas fixas. Em poucos minutos tens o teu
-              primeiro dashboard em Kwanzas.
+              Cria a conta, lança o salário e duas despesas fixas. Em poucos minutos já vês o teu
+              resumo do mês em Kwanzas.
             </p>
             <div className="cta-row">
               <Link className="btn btn-primary" to="/register">
@@ -462,12 +412,12 @@ function AuthLayout({ children }: { children: ReactNode }) {
             </li>
             <li>
               <Check size={16} aria-hidden="true" />
-              Os teus dados só são acessíveis pela tua sessão.
+              Só tu vês as tuas contas. Sem publicidade.
             </li>
           </ul>
         </div>
         <p className="muted" style={{ fontSize: '0.85rem' }}>
-          Projeto de engenharia por Adnírcio Inocêncio
+          Feito em Angola por Adnírcio Inocêncio
         </p>
       </aside>
       <main className="auth-panel">{children}</main>

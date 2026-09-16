@@ -994,10 +994,16 @@ td .tag {
 }
 
 .hero-facts b {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hero-facts b svg {
   color: var(--primary);
-  font-variant-numeric: tabular-nums;
 }
 
 .hero-facts p {
@@ -1305,44 +1311,25 @@ td .tag {
   margin-top: 3px;
 }
 
-.code-card {
-  background: var(--bg-subtle);
+.assurance {
+  background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: var(--space-4);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.82rem;
-  line-height: 1.8;
-  overflow-x: auto;
-  color: var(--ink);
-}
-
-.code-card .c-key {
-  color: var(--primary);
-}
-
-.code-card .c-str {
-  color: var(--pos);
-}
-
-.code-card .c-com {
-  color: var(--muted);
-}
-
-.stack-strip {
-  display: flex;
-  flex-wrap: wrap;
+  padding: var(--space-6);
+  box-shadow: var(--shadow);
+  display: grid;
   gap: var(--space-2);
+  align-content: start;
 }
 
-.chip {
-  border: 1px solid var(--line);
-  background: var(--card);
-  border-radius: 999px;
-  padding: 0.3rem 0.75rem;
-  font-size: 0.83rem;
-  font-weight: 500;
+.assurance h3 {
+  font-size: 1.05rem;
+}
+
+.assurance p {
+  margin: 0;
   color: var(--muted);
+  font-size: 0.93rem;
 }
 
 .lp-cta {
