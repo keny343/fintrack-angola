@@ -46,7 +46,7 @@ Details: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 # 1) Env
 cp .env.example .env
 
-# 2) Database
+# 2) Database (Docker, or a native PostgreSQL on 5432 — see docs/DEPLOYMENT.md)
 docker compose up -d
 
 # 3) Backend

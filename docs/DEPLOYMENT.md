@@ -7,6 +7,27 @@
 3. `cd backend && npm install && npm run dev`
 4. `cd frontend && npm install && npm run dev`
 
+The backend applies `SCHEMA_SQL` and seeds the system categories on boot, so there is no
+separate migration step.
+
+### Without Docker (native PostgreSQL)
+
+Create the role and database once, then point `DATABASE_URL` at it:
+
+```bash
+psql -U postgres -c "CREATE ROLE fintrack WITH LOGIN PASSWORD 'fintrack_dev';"
+psql -U postgres -c "CREATE DATABASE fintrack OWNER fintrack;"
+```
+
+Then in `.env`:
+
+```
+DATABASE_URL=postgresql://fintrack:fintrack_dev@localhost:5432/fintrack
+```
+
+On Windows, `psql` lives in `C:\Program Files\PostgreSQL\<version>\bin`; add it to `PATH` or call
+it with the full path.
+
 ## Suggested production topology (not wired yet)
 
 | Layer | Option |
