@@ -44,8 +44,18 @@ Finance (`src/routes/api.test.ts`):
 - **User isolation**: another account cannot list or delete a user's transactions, sees a zero
   balance, cannot post to a foreign account, and cannot see private categories
 
+Goals (`src/routes/goals.test.ts`):
+
+- Progress, remaining amount, and required monthly deposit until the deadline
+- Fully funded goals report `atingido`; goals without a deadline report `sem_prazo`
+- Invalid targets, dates, and contribution amounts are rejected
+- **User isolation**: goals, contributions, and deletion are restricted to the owner
+
 Domain (`src/domain/money.test.ts`): centavos validation, AOA formatting, budget progress,
 period totals, category/type compatibility.
+
+Domain (`src/domain/goals.test.ts`): calendar-month arithmetic, observed monthly pace,
+and the on-track/at-risk decision.
 
 ## Quality bar
 

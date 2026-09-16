@@ -28,4 +28,17 @@ Sets httpOnly cookie `token`.
 - `GET /api/dashboard?year_month=YYYY-MM`
 - `GET /api/reports/by-category?from=YYYY-MM-DD&to=YYYY-MM-DD`
 
+## Goals (auth required)
+
+- `GET /api/goals` → each goal includes `saved_cents`, `percent`, `remainingCents`,
+  `monthsRemaining`, `requiredMonthlyCents`, `pace_cents` and `status`
+  (`atingido` | `em_dia` | `em_risco` | `sem_prazo`)
+- `POST /api/goals` `{ name, target_cents, deadline? }`
+- `POST /api/goals/:id/contributions` `{ amount_cents, occurred_on, notes? }`
+- `DELETE /api/goals/:id`
+
+`requiredMonthlyCents` is the amount still missing divided by the whole calendar months
+left until the deadline. A goal is `em_risco` when the deadline is due/past with money
+missing, or when the observed monthly pace is below what is required.
+
 Amounts are always integer **centavos**.

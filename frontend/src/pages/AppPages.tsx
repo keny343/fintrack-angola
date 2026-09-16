@@ -10,7 +10,14 @@ import {
   YAxis,
 } from 'recharts';
 import { useAuth } from '../auth/AuthContext';
-import { api, type BudgetsResponse, type Dashboard, type Transaction } from '../services/api';
+import {
+  api,
+  type BudgetsResponse,
+  type Dashboard,
+  type Goal,
+  type GoalStatus,
+  type Transaction,
+} from '../services/api';
 import { currentYearMonth, formatAOA, formatDateAO, parseAOAInput } from '../utils/money';
 
 function AppShell() {
@@ -29,6 +36,7 @@ function AppShell() {
           <Link to="/app">Dashboard</Link>
           <Link to="/app/transactions">Transações</Link>
           <Link to="/app/budgets">Orçamentos</Link>
+          <Link to="/app/goals">Objetivos</Link>
           <Link to="/app/reports">Relatórios</Link>
         </nav>
         <button
@@ -408,6 +416,151 @@ export function BudgetsPage() {
         {data && data.budgets.length === 0 && (
           <p className="muted">Define o primeiro orçamento do mês.</p>
         )}
+      </div>
+    </section>
+  );
+}
+
+const GOAL_STATUS_LABEL: Record<GoalStatus, string> = {
+  atingido: 'Atingido',
+  em_dia: 'Em dia',
+  em_risco: 'Em risco',
+  sem_prazo: 'Sem prazo',
+};
+
+export function GoalsPage() {
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [name, setName] = useState('');
+  const [target, setTarget] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [contribution, setContribution] = useState<Record<number, string>>({});
+  const [error, setError] = useState('');
+
+  async function load() {
+    const r = await api.goals();
+    setGoals(r.goals);
+  }
+
+  useEffect(() => {
+    load().catch((e) => setError((e as Error).message));
+  }, []);
+
+  async function onCreate(e: FormEvent) {
+    e.preventDefault();
+    setError('');
+    try {
+      await api.createGoal({
+        name,
+        target_cents: parseAOAInput(target),
+        deadline: deadline || null,
+      });
+      setName('');
+      setTarget('');
+      setDeadline('');
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  async function onContribute(goalId: number) {
+    setError('');
+    try {
+      await api.addGoalContribution(goalId, {
+        amount_cents: parseAOAInput(contribution[goalId] ?? ''),
+        occurred_on: new Date().toISOString().slice(0, 10),
+      });
+      setContribution((prev) => ({ ...prev, [goalId]: '' }));
+      await load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
+  return (
+    <section>
+      <header className="page-head">
+        <div>
+          <h1>Objetivos</h1>
+          <p className="muted">Metas de poupança e ritmo necessário</p>
+        </div>
+      </header>
+      {error && <div className="alert">{error}</div>}
+      <form className="panel form-grid" onSubmit={onCreate}>
+        <label>
+          Objetivo
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Comprar computador"
+            required
+            minLength={2}
+          />
+        </label>
+        <label>
+          Valor alvo (Kz)
+          <input
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            placeholder="600000"
+            required
+          />
+        </label>
+        <label>
+          Prazo (opcional)
+          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+        </label>
+        <button className="btn btn-primary" type="submit">
+          Criar objetivo
+        </button>
+      </form>
+      <div className="budget-list">
+        {goals.map((g) => (
+          <article key={g.id} className="panel budget-card">
+            <header>
+              <h2>{g.name}</h2>
+              <span className={`tag tag-${g.status}`}>{GOAL_STATUS_LABEL[g.status]}</span>
+            </header>
+            <div className="bar">
+              <div className="bar-fill" style={{ width: `${Math.min(100, g.percent)}%` }} />
+            </div>
+            <p>
+              {formatAOA(g.saved_cents)} de {formatAOA(g.target_cents)} · {g.percent}% · Falta{' '}
+              {formatAOA(g.remainingCents)}
+            </p>
+            <p className="muted">
+              {g.deadline ? `Prazo ${formatDateAO(g.deadline)}` : 'Sem prazo definido'}
+              {g.requiredMonthlyCents != null && g.remainingCents > 0 && (
+                <> · Precisas de {formatAOA(g.requiredMonthlyCents)}/mês</>
+              )}
+              {g.pace_cents != null && <> · Ritmo actual {formatAOA(g.pace_cents)}/mês</>}
+            </p>
+            <div className="goal-actions">
+              <input
+                value={contribution[g.id] ?? ''}
+                onChange={(e) =>
+                  setContribution((prev) => ({ ...prev, [g.id]: e.target.value }))
+                }
+                placeholder="Valor a depositar"
+                aria-label={`Contribuição para ${g.name}`}
+              />
+              <button className="btn btn-primary btn-sm" type="button" onClick={() => onContribute(g.id)}>
+                Contribuir
+              </button>
+              <button
+                className="btn btn-ghost btn-sm"
+                type="button"
+                onClick={async () => {
+                  await api.deleteGoal(g.id);
+                  await load();
+                }}
+              >
+                Apagar
+              </button>
+            </div>
+          </article>
+        ))}
+        {goals.length === 0 && <p className="muted">Sem objetivos ainda. Cria o primeiro.</p>}
       </div>
     </section>
   );

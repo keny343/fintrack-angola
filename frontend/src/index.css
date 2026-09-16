@@ -352,6 +352,47 @@ td {
   background: var(--teal);
 }
 
+.tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #eef3f0;
+  color: var(--muted);
+}
+
+.tag-atingido {
+  background: #e7f4ec;
+  border-color: #bfe0cd;
+  color: var(--pos);
+}
+
+.tag-em_risco {
+  background: #fdecea;
+  border-color: #f3c0bb;
+  color: var(--neg);
+}
+
+.tag-em_dia {
+  background: #e6f0ef;
+  border-color: #c3ddda;
+  color: var(--teal-deep);
+}
+
+.goal-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.65rem;
+}
+
+.goal-actions input {
+  max-width: 200px;
+}
+
 .center {
   display: grid;
   place-items: center;

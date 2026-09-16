@@ -43,6 +43,18 @@ export const api = {
     request<BudgetsResponse>(`/api/budgets?year_month=${encodeURIComponent(yearMonth)}`),
   upsertBudget: (body: unknown) =>
     request<{ budget: unknown }>('/api/budgets', { method: 'PUT', body: JSON.stringify(body) }),
+  goals: () => request<{ goals: Goal[] }>('/api/goals'),
+  createGoal: (body: { name: string; target_cents: number; deadline: string | null }) =>
+    request<{ goal: { id: number } }>('/api/goals', { method: 'POST', body: JSON.stringify(body) }),
+  addGoalContribution: (
+    goalId: number,
+    body: { amount_cents: number; occurred_on: string }
+  ) =>
+    request<{ contribution: unknown }>(`/api/goals/${goalId}/contributions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  deleteGoal: (id: number) => request<{ ok: boolean }>(`/api/goals/${id}`, { method: 'DELETE' }),
   reportByCategory: (from: string, to: string) =>
     request<{ rows: Array<{ name: string; type: string; total_cents: number }> }>(
       `/api/reports/by-category?from=${from}&to=${to}`
@@ -76,6 +88,22 @@ export type Dashboard = {
     notes: string | null;
     category_name: string;
   }>;
+};
+
+export type GoalStatus = 'atingido' | 'em_dia' | 'em_risco' | 'sem_prazo';
+
+export type Goal = {
+  id: number;
+  name: string;
+  target_cents: number;
+  deadline: string | null;
+  saved_cents: number;
+  pace_cents: number | null;
+  percent: number;
+  remainingCents: number;
+  monthsRemaining: number | null;
+  requiredMonthlyCents: number | null;
+  status: GoalStatus;
 };
 
 export type BudgetsResponse = {

@@ -38,6 +38,7 @@ Details: [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
 | Budgets | Monthly limit per category + progress |
 | Dashboard | Balance, month income/expense, chart, recent activity |
 | Reports | Totals by category for a date range |
+| Goals | Savings targets with contributions, required monthly pace, on-track status |
 
 ## Quick start
 
@@ -79,8 +80,8 @@ See [`docs/SECURITY.md`](./docs/SECURITY.md).
 
 ## Roadmap
 
+- [x] Savings goals
 - [ ] Recurring transactions
-- [ ] Savings goals
 - [ ] CSV import/export
 - [ ] Live deploy (Vercel + Render)
 - [ ] Optional AI insights layer (deterministic metrics first)

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { query } from '../db/pool.js';
 import { requireAuth, audit } from '../middleware/auth.js';
 import { assertPositiveCents, categoryMatchesType } from '../domain/money.js';
+import { goalProgress, monthlyPaceCents } from '../domain/goals.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -257,6 +258,119 @@ router.get('/dashboard', async (req, res) => {
     by_category: byCategory.rows,
     recent: recent.rows,
   });
+});
+
+const goalSchema = z.object({
+  name: z.string().min(2).max(120),
+  target_cents: z.number().int().positive(),
+  deadline: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .nullable(),
+});
+
+function isoDate(value: unknown): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
+
+router.get('/goals', async (req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const goals = await query(
+    `SELECT g.id, g.name, g.target_cents, g.deadline,
+            COALESCE(SUM(gc.amount_cents), 0)::int AS saved_cents,
+            MIN(gc.occurred_on) AS first_contribution_on
+     FROM goals g
+     LEFT JOIN goal_contributions gc ON gc.goal_id = g.id
+     WHERE g.user_id = $1
+     GROUP BY g.id
+     ORDER BY g.deadline NULLS LAST, g.id`,
+    [req.user!.id]
+  );
+
+  res.json({
+    goals: goals.rows.map((g) => {
+      const deadline = isoDate(g.deadline);
+      const paceCents = monthlyPaceCents(
+        g.saved_cents,
+        isoDate(g.first_contribution_on),
+        today
+      );
+      return {
+        id: g.id,
+        name: g.name,
+        target_cents: g.target_cents,
+        deadline,
+        saved_cents: g.saved_cents,
+        pace_cents: paceCents,
+        ...goalProgress({
+          targetCents: g.target_cents,
+          savedCents: g.saved_cents,
+          deadline,
+          today,
+          paceCents,
+        }),
+      };
+    }),
+  });
+});
+
+router.post('/goals', async (req, res) => {
+  const parsed = goalSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Dados do objetivo inválidos.' });
+  const r = await query(
+    `INSERT INTO goals (user_id, name, target_cents, deadline)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, name, target_cents, deadline`,
+    [req.user!.id, parsed.data.name, parsed.data.target_cents, parsed.data.deadline ?? null]
+  );
+  await audit(req.user!.id, 'GOAL_CREATED', { id: r.rows[0].id });
+  res.status(201).json({ goal: r.rows[0] });
+});
+
+router.post('/goals/:id/contributions', async (req, res) => {
+  const goalId = Number(req.params.id);
+  const schema = z.object({
+    amount_cents: z.number().int().positive(),
+    occurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    notes: z.string().max(500).optional().nullable(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: 'Contribuição inválida.' });
+
+  const goal = await query('SELECT id FROM goals WHERE id = $1 AND user_id = $2', [
+    goalId,
+    req.user!.id,
+  ]);
+  if (!goal.rows.length) return res.status(404).json({ error: 'Objetivo não encontrado.' });
+
+  const r = await query(
+    `INSERT INTO goal_contributions (goal_id, user_id, amount_cents, occurred_on, notes)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, goal_id, amount_cents, occurred_on, notes`,
+    [
+      goalId,
+      req.user!.id,
+      parsed.data.amount_cents,
+      parsed.data.occurred_on,
+      parsed.data.notes ?? null,
+    ]
+  );
+  await audit(req.user!.id, 'GOAL_CONTRIBUTION_ADDED', { goal_id: goalId });
+  res.status(201).json({ contribution: r.rows[0] });
+});
+
+router.delete('/goals/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const r = await query('DELETE FROM goals WHERE id = $1 AND user_id = $2 RETURNING id', [
+    id,
+    req.user!.id,
+  ]);
+  if (!r.rows.length) return res.status(404).json({ error: 'Objetivo não encontrado.' });
+  await audit(req.user!.id, 'GOAL_DELETED', { id });
+  res.json({ ok: true });
 });
 
 router.get('/reports/by-category', async (req, res) => {

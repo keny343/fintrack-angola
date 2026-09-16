@@ -50,6 +50,27 @@ CREATE TABLE IF NOT EXISTS budgets (
 );
 CREATE INDEX IF NOT EXISTS idx_budgets_user_month ON budgets(user_id, year_month);
 
+CREATE TABLE IF NOT EXISTS goals (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  target_cents INTEGER NOT NULL CHECK (target_cents > 0),
+  deadline DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
+
+CREATE TABLE IF NOT EXISTS goal_contributions (
+  id SERIAL PRIMARY KEY,
+  goal_id INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  occurred_on DATE NOT NULL,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_goal_contrib_goal ON goal_contributions(goal_id, occurred_on);
+
 CREATE TABLE IF NOT EXISTS audit_events (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
