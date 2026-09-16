@@ -10,6 +10,12 @@ export function createApp() {
   const app = express();
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+  // Behind Render's load balancer the client IP only exists in X-Forwarded-For,
+  // and without this the rate limiters would throttle every user as one.
+  if (process.env.TRUST_PROXY === 'true') {
+    app.set('trust proxy', 1);
+  }
+
   app.use(helmet());
   app.use(
     cors({

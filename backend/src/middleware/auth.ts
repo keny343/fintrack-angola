@@ -28,10 +28,15 @@ export function signToken(user: AuthUser): string {
 
 export function cookieOptions() {
   const secure = process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
+  // In production the frontend proxies /api through its own domain, so the
+  // session cookie is first-party and 'lax' holds. Pointing the browser
+  // straight at the API on another domain needs 'none', which Safari and
+  // Firefox then block by default — see docs/DEPLOYMENT.md.
+  const sameSite = process.env.COOKIE_SAMESITE === 'none' ? ('none' as const) : ('lax' as const);
   return {
     httpOnly: true,
-    sameSite: 'lax' as const,
-    secure,
+    sameSite,
+    secure: sameSite === 'none' ? true : secure,
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/',
   };

@@ -17,8 +17,11 @@ async function boot() {
   await seedSystemCategories();
 
   const app = createApp();
+  // No host argument, so Node listens on every interface (IPv4 and IPv6).
+  // Hosts like Render route to the container's external address and would not
+  // reach a server bound to localhost.
   app.listen(port, () => {
-    console.log(`FinTrack API on http://localhost:${port}`);
+    console.log(`FinTrack API listening on port ${port}`);
   });
 }
 

@@ -1,0 +1,38 @@
+databases:
+  - name: fintrack-db
+    databaseName: fintrack
+    user: fintrack
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: fintrack-angola-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    # --include=dev because NODE_ENV=production would otherwise skip
+    # devDependencies, and the build needs TypeScript.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fintrack-db
+          property: connectionString
+      # Rotating this logs everyone out, which is the intended behaviour.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: TRUST_PROXY
+        value: "true"
+      # The frontend origin, filled in after the Vercel project exists.
+      - key: FRONTEND_URL
+        sync: false

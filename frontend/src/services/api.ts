@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// In production the API lives behind /api on this same origin (Vercel rewrites
+// it to the Render service), which keeps the session cookie first-party.
+const API_URL =
+  import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:4000' : '');
 
 export type User = { id: number; email: string; name: string };
 
