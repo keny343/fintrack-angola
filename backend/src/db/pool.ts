@@ -7,6 +7,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 dotenv.config();
 
+// DATE columns (OID 1082) must stay as 'YYYY-MM-DD' strings. The default parser
+// turns them into JS Dates at local midnight, which shift a day back when the
+// API serializes them to UTC (observed in UTC+1: day 5 rendered as day 4).
+pg.types.setTypeParser(1082, (value) => value);
+
 export type Row = Record<string, any>;
 
 export type QueryResult<T extends Row = Row> = {
