@@ -64,9 +64,13 @@ Health: `GET http://localhost:4000/health`
 ## Tests
 
 ```bash
-cd backend && npm test
+cd backend && npm test     # domain + API integration (PGlite, no Docker needed)
 cd frontend && npm test
 ```
+
+API tests boot **PGlite** (Postgres in WebAssembly) in-process, apply the real schema, and cover
+auth, validation, budget math, and **per-user data isolation**. Details:
+[`docs/TESTING.md`](./docs/TESTING.md).
 
 ## Security notes
 

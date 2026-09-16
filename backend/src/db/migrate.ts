@@ -1,14 +1,14 @@
-import { pool, query } from './pool.js';
+import { closePool, query } from './pool.js';
 import { SCHEMA_SQL } from './schema.js';
 
 async function migrate() {
   await query(SCHEMA_SQL);
   console.log('Schema applied.');
-  await pool.end();
+  await closePool();
 }
 
 migrate().catch(async (err) => {
   console.error(err);
-  await pool.end();
+  await closePool();
   process.exit(1);
 });

@@ -13,6 +13,7 @@
 | CORS | Allowlist `FRONTEND_URL` with credentials |
 | Abuse | Rate limit on login/register and general API |
 | Audit | `audit_events` for register/login/tx/budget |
+| Isolation tests | Integration suite asserts one user cannot read, delete, or post against another user's data |
 
 ## Secrets
 

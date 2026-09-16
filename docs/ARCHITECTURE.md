@@ -28,6 +28,12 @@ All amounts are **`amount_cents` integers** (1 Kz = 100 centavos). Formatting ha
 - `backend/src/routes/*` — HTTP + authorization
 - `backend/src/db/*` — pool, schema, seed
 
+## Swappable SQL executor
+
+`db/pool.ts` lazily creates the `pg` pool and exposes `setQueryExecutor`. Production runs against
+Postgres; the integration tests inject PGlite (Postgres in WebAssembly) so the same SQL runs
+in-process without Docker. See [`TESTING.md`](./TESTING.md).
+
 ## Why PostgreSQL
 
 Differentiates this project from Mara/SIGDoc (MySQL) and supports clean date/`to_char` aggregations for monthly dashboards.
